@@ -63,6 +63,43 @@ bot.on("message:text", async (ctx) => {
 });
 
 // Cliques em botões inline (✅ Confirmar / ❌ Cancelar) → encaminhar
+bot.on("message:photo", async (ctx) => {
+  try {
+    const res = await forwardToWeb(ctx.update);
+    if (!res.ok) {
+      console.error(
+        `[bot] photo webhook rejected: ${res.status} ${await res.text()}`
+      );
+      await ctx.reply("⚠️ Erro ao receber a fatura. Web app está rodando?");
+      return;
+    }
+    // Webhook responde com link após processar — não duplica mensagem aqui
+  } catch (err) {
+    console.error("[bot] photo webhook fetch failed:", err);
+    await ctx.reply(
+      "⚠️ Não consegui falar com o servidor. O web app está rodando em localhost:3000?"
+    );
+  }
+});
+
+bot.on("message:document", async (ctx) => {
+  try {
+    const res = await forwardToWeb(ctx.update);
+    if (!res.ok) {
+      console.error(
+        `[bot] document webhook rejected: ${res.status} ${await res.text()}`
+      );
+      await ctx.reply("⚠️ Erro ao receber o documento. Web app está rodando?");
+      return;
+    }
+  } catch (err) {
+    console.error("[bot] document webhook fetch failed:", err);
+    await ctx.reply(
+      "⚠️ Não consegui falar com o servidor. O web app está rodando em localhost:3000?"
+    );
+  }
+});
+
 bot.on("callback_query:data", async (ctx) => {
   try {
     const res = await forwardToWeb(ctx.update);

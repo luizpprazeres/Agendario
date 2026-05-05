@@ -17,6 +17,7 @@ import { getDb } from "@/lib/db";
 import { serverEnv } from "@/env";
 import { answerCallbackQuery, sendMessage } from "@/lib/telegram/api";
 import { parseCallbackData } from "@/lib/telegram/preview";
+import { processReceiptUpload } from "@/lib/telegram/receipts";
 
 // ---------- Schemas ----------
 
@@ -26,12 +27,31 @@ const fromSchema = z.object({
   first_name: z.string().optional(),
 });
 
+const photoSizeSchema = z.object({
+  file_id: z.string(),
+  file_unique_id: z.string(),
+  width: z.number(),
+  height: z.number(),
+  file_size: z.number().optional(),
+});
+
+const documentSchema = z.object({
+  file_id: z.string(),
+  file_unique_id: z.string(),
+  file_name: z.string().optional(),
+  mime_type: z.string().optional(),
+  file_size: z.number().optional(),
+});
+
 const messageSchema = z.object({
   message_id: z.number(),
   from: fromSchema,
   chat: z.object({ id: z.number() }),
   date: z.number(),
   text: z.string().optional(),
+  caption: z.string().optional(),
+  photo: z.array(photoSizeSchema).optional(),
+  document: documentSchema.optional(),
 });
 
 const callbackQuerySchema = z.object({
@@ -93,14 +113,14 @@ export async function POST(req: NextRequest) {
 
   // ---------- message ----------
   const message = parsed.message;
-  if (!message?.text) {
-    return NextResponse.json({ ok: true, ignored: "no_text" });
+  if (!message) {
+    return NextResponse.json({ ok: true, ignored: "no_message" });
   }
 
   const chatId = String(message.chat.id);
 
-  // Comando /start — onboarding stub (associação real virá com auth flow)
-  if (message.text.startsWith("/start")) {
+  // Comandos /start e /ping não exigem associação de conta
+  if (message.text?.startsWith("/start")) {
     await sendMessage({
       chat_id: chatId,
       text: [
@@ -109,22 +129,22 @@ export async function POST(req: NextRequest) {
         "Para associar este chat à sua conta, faça login no app web e cole seu chat\\_id:",
         `\`${chatId}\``,
         "",
-        "Depois de associado, é só me mandar mensagens livres como:",
-        "• `gastei 50 no uber`",
-        "• `plantão UPA Caruaru sex 19h às sab 7h`",
-        "• `lembrar de renovar CRM dia 15`",
+        "Depois de associado, você pode me mandar:",
+        "• mensagens livres (`gastei 50 no uber`)",
+        "• fotos de fatura (📸 print do app do banco)",
+        "• PDFs de extrato (anexe como documento)",
       ].join("\n"),
       parse_mode: "MarkdownV2",
     });
     return NextResponse.json({ ok: true });
   }
 
-  if (message.text.startsWith("/ping")) {
+  if (message.text?.startsWith("/ping")) {
     await sendMessage({ chat_id: chatId, text: "pong 🏓" });
     return NextResponse.json({ ok: true });
   }
 
-  // Resolver usuário
+  // Resolver usuário (necessário pra todos os tipos de mensagem)
   const userId = await resolveUser(chatId);
   if (!userId) {
     await sendMessage({
@@ -132,6 +152,45 @@ export async function POST(req: NextRequest) {
       text: `⚠️ Este chat não está associado a uma conta Agendario.\n\nUse /start para instruções.`,
     });
     return NextResponse.json({ ok: true, ignored: "unknown_user" });
+  }
+
+  // ---------- photo (fatura via foto) ----------
+  if (message.photo && message.photo.length > 0) {
+    const largest = message.photo[message.photo.length - 1];
+    if (!largest) {
+      return NextResponse.json({ ok: true, ignored: "empty_photo" });
+    }
+    await processReceiptUpload({
+      userId,
+      chatId,
+      fileId: largest.file_id,
+      fileName: null,
+      mimeType: "image/jpeg",
+      fileSize: largest.file_size ?? null,
+      source: "telegram_image",
+      messageId: message.message_id,
+    });
+    return NextResponse.json({ ok: true, batch: "queued" });
+  }
+
+  // ---------- document (PDF/imagem como anexo) ----------
+  if (message.document) {
+    await processReceiptUpload({
+      userId,
+      chatId,
+      fileId: message.document.file_id,
+      fileName: message.document.file_name ?? null,
+      mimeType: message.document.mime_type ?? null,
+      fileSize: message.document.file_size ?? null,
+      source: "telegram_document",
+      messageId: message.message_id,
+    });
+    return NextResponse.json({ ok: true, batch: "queued" });
+  }
+
+  // ---------- text (mensagem natural) ----------
+  if (!message.text) {
+    return NextResponse.json({ ok: true, ignored: "unsupported_message_type" });
   }
 
   // Persistir inbox_item (idempotente via external_id = telegram message_id)
