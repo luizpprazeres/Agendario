@@ -4,6 +4,7 @@ import {
   categories,
   financialAccounts,
   shifts,
+  subscriptions,
   transactions,
   workplaces,
 } from "@agendario/db";
@@ -183,12 +184,32 @@ async function loadDashboard(userId: string) {
     .orderBy(asc(shifts.starts_at))
     .limit(5);
 
+  const activeSubscriptions = await db
+    .select({
+      id: subscriptions.id,
+      name: subscriptions.name,
+      vendor: subscriptions.vendor,
+      amount_cents: subscriptions.amount_cents,
+      billing_cycle: subscriptions.billing_cycle,
+      next_charge_on: subscriptions.next_charge_on,
+      color: subscriptions.color,
+    })
+    .from(subscriptions)
+    .where(
+      and(
+        eq(subscriptions.user_id, userId),
+        eq(subscriptions.status, "active")
+      )
+    )
+    .orderBy(asc(subscriptions.next_charge_on));
+
   const totalCents = Number(totalRow[0]?.total ?? 0);
 
   return {
     totalCents,
     recentTx,
     upcoming,
+    activeSubscriptions,
     monthSummary: {
       label: monthLabel(year, month),
       totals: monthTotals,
@@ -226,9 +247,48 @@ export default async function DashboardPage() {
     ?.split(" ")[0]
     ?.trim();
 
-  const { totalCents, recentTx, upcoming, monthSummary } = await loadDashboard(
-    user.id
-  );
+  const {
+    totalCents,
+    recentTx,
+    upcoming,
+    activeSubscriptions,
+    monthSummary,
+  } = await loadDashboard(user.id);
+
+  const subsMonthlyCents = activeSubscriptions.reduce((sum, sub) => {
+    const amount = Number(sub.amount_cents);
+    if (sub.billing_cycle === "yearly") return sum + Math.round(amount / 12);
+    if (sub.billing_cycle === "weekly") return sum + Math.round(amount * 4.33);
+    if (sub.billing_cycle === "quarterly") return sum + Math.round(amount / 3);
+    return sum + amount;
+  }, 0);
+
+  // Hoje em America/Recife como YYYY-MM-DD pra comparar com next_charge_on (date).
+  const todayStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Recife",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const daysUntil = (target: string | null) => {
+    if (!target) return null;
+    const a = Date.UTC(
+      Number(todayStr.slice(0, 4)),
+      Number(todayStr.slice(5, 7)) - 1,
+      Number(todayStr.slice(8, 10))
+    );
+    const b = Date.UTC(
+      Number(target.slice(0, 4)),
+      Number(target.slice(5, 7)) - 1,
+      Number(target.slice(8, 10))
+    );
+    return Math.round((b - a) / 86400000);
+  };
+  const dayMonthShort = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "UTC",
+  });
 
   const incomeRow = monthSummary.totals.find((r) => r.type === "income");
   const expenseRow = monthSummary.totals.find((r) => r.type === "expense");
@@ -494,7 +554,10 @@ export default async function DashboardPage() {
                           style={{ background: swatchColor }}
                         />
                         <span className="truncate">
-                          {cat.category_icon ? `${cat.category_icon} ` : ""}
+                          {cat.category_icon &&
+                          !/^[a-z0-9_-]+$/i.test(cat.category_icon)
+                            ? `${cat.category_icon} `
+                            : ""}
                           {name}
                         </span>
                       </span>
@@ -520,6 +583,110 @@ export default async function DashboardPage() {
             </ul>
           </section>
         ) : null}
+
+        {/* Assinaturas */}
+        <section
+          className="rounded-3xl border p-5 sm:p-6"
+          style={{
+            background: "oklch(0.21 0.007 30)",
+            borderColor: "oklch(0.245 0.008 30)",
+          }}
+        >
+          <div className="mb-4 flex items-baseline justify-between gap-3">
+            <h2
+              className="text-base font-medium"
+              style={{ fontStretch: "94%" }}
+            >
+              Assinaturas
+            </h2>
+            <p
+              className="shrink-0 text-xs tabular-nums"
+              style={{ color: "oklch(0.55 0.006 30)" }}
+            >
+              {activeSubscriptions.length === 0
+                ? "—"
+                : `${activeSubscriptions.length} ativa${activeSubscriptions.length === 1 ? "" : "s"} · ${BRL.format(subsMonthlyCents / 100)}/mês`}
+            </p>
+          </div>
+          {activeSubscriptions.length === 0 ? (
+            <p
+              className="rounded-2xl border px-4 py-6 text-center text-xs"
+              style={{
+                background: "oklch(0.245 0.008 30)",
+                borderColor: "oklch(0.28 0.008 30)",
+                color: "oklch(0.55 0.006 30)",
+              }}
+            >
+              Nenhuma assinatura cadastrada. Use /assinatura no Telegram (em breve).
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {activeSubscriptions.map((sub) => {
+                const swatchColor = sub.color ?? "oklch(0.6 0.05 250)";
+                const initial = sub.name.trim().charAt(0).toUpperCase();
+                const days = daysUntil(sub.next_charge_on);
+                const isYearly = sub.billing_cycle === "yearly";
+                const due =
+                  sub.next_charge_on === null
+                    ? null
+                    : days !== null && days < 0
+                      ? "atrasada"
+                      : days === 0
+                        ? "hoje"
+                        : days === 1
+                          ? "amanhã"
+                          : `${dayMonthShort.format(new Date(`${sub.next_charge_on}T00:00:00Z`)).replace(".", "")}`;
+                const dueColor =
+                  days !== null && days <= 3
+                    ? "text-amber-300"
+                    : undefined;
+                return (
+                  <li key={sub.id} className="flex items-center gap-3">
+                    <span
+                      className="grid size-9 shrink-0 place-items-center rounded-xl text-sm font-medium"
+                      style={{
+                        background: `color-mix(in oklch, ${swatchColor} 18%, transparent)`,
+                        color: swatchColor,
+                      }}
+                      aria-hidden
+                    >
+                      {initial}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline gap-2">
+                        <p className="truncate text-sm">{sub.name}</p>
+                        {isYearly ? (
+                          <span
+                            className="shrink-0 rounded-full px-1.5 py-px font-mono text-[9px] uppercase tracking-wide"
+                            style={{
+                              background: "oklch(0.27 0.008 30)",
+                              color: "oklch(0.7 0.006 30)",
+                            }}
+                          >
+                            anual
+                          </span>
+                        ) : null}
+                      </div>
+                      {due ? (
+                        <p
+                          className={`text-[11px] ${dueColor ?? ""}`}
+                          style={
+                            dueColor ? undefined : { color: "oklch(0.55 0.006 30)" }
+                          }
+                        >
+                          próxima {due}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span className="shrink-0 text-sm font-medium tabular-nums">
+                      {BRL.format(Number(sub.amount_cents) / 100)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         {/* Transações recentes */}
         <section
@@ -567,13 +734,17 @@ export default async function DashboardPage() {
                     style={{ borderColor: "oklch(0.245 0.008 30)" }}
                   >
                     <span
-                      className="grid size-9 shrink-0 place-items-center rounded-xl text-sm"
+                      className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-xl text-sm"
                       style={{
                         background: `color-mix(in oklch, ${swatchColor} 18%, transparent)`,
                       }}
                       aria-hidden
                     >
-                      {tx.category_icon ?? (isIncome ? "↑" : "↓")}
+                      {tx.category_icon && !/^[a-z0-9_-]+$/i.test(tx.category_icon)
+                        ? tx.category_icon
+                        : isIncome
+                          ? "↑"
+                          : "↓"}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm">{tx.description}</p>
