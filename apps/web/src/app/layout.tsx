@@ -21,7 +21,27 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-dvh bg-zinc-950 text-zinc-100 antialiased">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body
+        className="min-h-dvh bg-zinc-950 text-zinc-100 antialiased"
+        style={{
+          fontFamily:
+            "'Mona Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+          fontFeatureSettings: '"ss02", "cv09"',
+          fontOpticalSizing: "auto",
+        }}
+      >
         {children}
       </body>
     </html>
