@@ -1,5 +1,6 @@
 import { categorizeTransactionFn } from "./categorize-transaction";
 import { confirmInboxItem } from "./confirm-inbox-item";
+import { extractReceiptFn } from "./extract-receipt";
 import { parseInboxItem } from "./parse-inbox-item";
 import { syncShiftToGcal } from "./sync-shift-to-gcal";
 
@@ -12,4 +13,5 @@ export const functions = [
   confirmInboxItem,
   categorizeTransactionFn,
   syncShiftToGcal,
+  extractReceiptFn,
 ];

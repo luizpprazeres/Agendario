@@ -36,6 +36,9 @@ type Events = {
   "insights/monthly.generate": {
     data: { user_id: string; period_start: string; period_end: string };
   };
+  "receipts/extract-requested": {
+    data: { batch_id: string };
+  };
 };
 
 export const inngest = new Inngest({

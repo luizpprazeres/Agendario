@@ -13,6 +13,7 @@ const serverSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL_PARSE: z.string().default("gpt-4o-mini"),
   OPENAI_MODEL_INSIGHTS: z.string().default("gpt-4o"),
+  OPENAI_MODEL_VISION: z.string().default("gpt-4.1-mini"),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
