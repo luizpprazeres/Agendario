@@ -1,10 +1,23 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { RegisterSW } from "@/components/register-sw";
 
 export const metadata: Metadata = {
   title: "Agendario",
-  description: "Workspace médico + financeiro",
-  manifest: "/manifest.json",
+  description: "Workspace médico + financeiro. Captura por Telegram.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "Agendario",
+  appleWebApp: {
+    capable: true,
+    title: "Agendario",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
@@ -12,6 +25,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -43,6 +58,7 @@ export default function RootLayout({
         }}
       >
         {children}
+        <RegisterSW />
       </body>
     </html>
   );
