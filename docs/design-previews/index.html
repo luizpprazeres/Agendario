@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Agendario · 3 variações de dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: 'Geist', system-ui, sans-serif; font-feature-settings: "ss01","cv11"; }
+  .mono { font-family: 'Geist Mono', monospace; }
+  .tabnums { font-variant-numeric: tabular-nums; }
+  /* Subtle grain so it doesn't feel sterile */
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 3px 3px; opacity: 0.5;
+  }
+</style>
+</head>
+<body class="min-h-dvh bg-zinc-950 text-zinc-100">
+
+<main class="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-24">
+
+  <!-- Header -->
+  <header class="mb-16 sm:mb-24 max-w-3xl">
+    <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-3 py-1 text-xs text-zinc-400">
+      <span class="size-1.5 rounded-full bg-emerald-400"></span>
+      <span>3 variações · 1 escolha</span>
+    </div>
+    <h1 class="text-4xl sm:text-5xl font-semibold tracking-tight leading-[1.05]">
+      Qual dashboard <span class="text-zinc-500">você quer</span> que o Agendario seja?
+    </h1>
+    <p class="mt-6 text-zinc-400 text-base sm:text-lg leading-relaxed max-w-2xl">
+      Três direções estéticas distintas, mesma persona (Luiz, intensivista) e mesmos dados reais.
+      Clica em uma pra ver desktop e mobile lado a lado. Depois me diz qual te chama mais — ou se quer misturar partes de cada.
+    </p>
+  </header>
+
+  <!-- Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+
+    <!-- Cockpit -->
+    <a href="cockpit.html" class="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 transition hover:border-zinc-700 hover:bg-zinc-900/70">
+      <div class="absolute -top-12 -right-12 size-40 rounded-full bg-amber-500/10 blur-3xl transition group-hover:bg-amber-500/20"></div>
+      <div class="relative">
+        <div class="mono text-xs text-amber-400/80 tracking-wider uppercase">01 — densidade</div>
+        <h2 class="mt-2 text-2xl font-semibold tracking-tight">Cockpit</h2>
+        <p class="mt-3 text-sm text-zinc-400 leading-relaxed">
+          Densidade Firefly III. Tudo de relance numa tela. Tabelas ricas, drilldowns visíveis, tabular nums religioso.
+          Para quem prefere um cockpit a um app.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-1.5">
+          <span class="text-[10px] mono px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-400">multi-coluna</span>
+          <span class="text-[10px] mono px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-400">tabelas</span>
+          <span class="text-[10px] mono px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-400">atalhos</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Native -->
+    <a href="native.html" class="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 transition hover:border-zinc-700 hover:bg-zinc-900/70">
+      <div class="absolute -top-12 -right-12 size-40 rounded-full bg-emerald-500/10 blur-3xl transition group-hover:bg-emerald-500/20"></div>
+      <div class="relative">
+        <div class="mono text-xs text-emerald-400/80 tracking-wider uppercase">02 — polish</div>
+        <h2 class="mt-2 text-2xl font-semibold tracking-tight">Native</h2>
+        <p class="mt-3 text-sm text-zinc-400 leading-relaxed">
+          Polish Copilot Money. Cards grandes, tipografia caprichada, animações sutis,
+          feel premium iOS. Cada pixel cuidado.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-1.5">
+          <span class="text-[10px] mono px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-400">cards grandes</span>
+          <span class="text-[10px] mono px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-400">gestures</span>
+          <span class="text-[10px] mono px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-400">premium</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Modular -->
+    <a href="modular.html" class="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 transition hover:border-zinc-700 hover:bg-zinc-900/70">
+      <div class="absolute -top-12 -right-12 size-40 rounded-full bg-violet-500/10 blur-3xl transition group-hover:bg-violet-500/20"></div>
+      <div class="relative">
+        <div class="mono text-xs text-violet-400/80 tracking-wider uppercase">03 — modularidade</div>
+        <h2 class="mt-2 text-2xl font-semibold tracking-tight">Modular</h2>
+        <p class="mt-3 text-sm text-zinc-400 leading-relaxed">
+          Blocos Notion-style, multiple views (table/calendar/kanban), command palette destacado.
+          Você decide a forma, não o app.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-1.5">
+          <span class="text-[10px] mono px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-400">blocos</span>
+          <span class="text-[10px] mono px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-400">views</span>
+          <span class="text-[10px] mono px-2 py-0.5 rounded-full border border-zinc-800 text-zinc-400">⌘K</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Context strip -->
+  <div class="mt-16 sm:mt-24 grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-8 border-t border-zinc-900 pt-12">
+    <div>
+      <div class="mono text-[10px] tracking-wider uppercase text-zinc-500 mb-2">Persona</div>
+      <p class="text-sm text-zinc-300">Médico intensivista em Recife. Plantões em múltiplos hospitais. Captura tudo via Telegram durante o dia.</p>
+    </div>
+    <div>
+      <div class="mono text-[10px] tracking-wider uppercase text-zinc-500 mb-2">Domínios</div>
+      <p class="text-sm text-zinc-300">Finanças (cartões, assinaturas, bills, carnê-leão), agenda médica, tasks, inbox, insights.</p>
+    </div>
+    <div>
+      <div class="mono text-[10px] tracking-wider uppercase text-zinc-500 mb-2">Constraints</div>
+      <p class="text-sm text-zinc-300">Mobile-first 80%, dark default, tabular nums em tudo financeiro, sem libs de chart, sem emojis decorativos.</p>
+    </div>
+  </div>
+
+  <footer class="mt-20 pt-8 border-t border-zinc-900 text-xs text-zinc-500 mono">
+    /docs/design-previews/index.html · brief em /docs/DESIGN-BRIEF-AGENDARIO.md
+  </footer>
+
+</main>
+</body>
+</html>

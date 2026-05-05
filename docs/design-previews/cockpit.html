@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cockpit · Agendario</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { color-scheme: dark; --bg: oklch(0.18 0.005 250); }
+  body { font-family: 'Geist', system-ui, sans-serif; background: oklch(0.18 0.005 250); font-feature-settings: "ss01","cv11"; }
+  .mono { font-family: 'Geist Mono', monospace; font-feature-settings: "zero","ss03"; }
+  .tabnums { font-variant-numeric: tabular-nums; }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 999px; }
+  .grid-bg { background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 40px 40px; }
+  .ring-amber { box-shadow: 0 0 0 1px rgba(251,191,36,0.15) inset; }
+  .device-mobile { width: 375px; }
+  .device-desktop { width: 1280px; transform-origin: top left; }
+</style>
+</head>
+<body class="text-zinc-100 min-h-dvh">
+
+<!-- Top bar of the preview document -->
+<header class="sticky top-0 z-50 border-b border-zinc-900 bg-zinc-950/90 backdrop-blur">
+  <div class="mx-auto max-w-[1500px] px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-100">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 19l-7-7 7-7"/></svg>
+        voltar
+      </a>
+      <span class="text-zinc-700">/</span>
+      <span class="text-sm text-zinc-400 mono">01 — cockpit</span>
+    </div>
+    <div class="flex items-center gap-3 text-xs text-zinc-500 mono">
+      <span class="hidden sm:inline">desktop 1280 · mobile 375</span>
+      <a href="native.html" class="text-emerald-400/80 hover:text-emerald-400">→ native</a>
+    </div>
+  </div>
+</header>
+
+<main class="mx-auto max-w-[1500px] px-6 py-10 space-y-16">
+
+  <!-- Intro -->
+  <section class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
+    <div>
+      <div class="mono text-[10px] tracking-wider uppercase text-amber-400/80">01 — densidade</div>
+      <h1 class="mt-2 text-3xl font-semibold tracking-tight">Cockpit</h1>
+    </div>
+    <div class="md:col-span-2">
+      <p class="text-sm text-zinc-400 leading-relaxed">
+        Inspirado em Firefly III + Bloomberg terminal. Tudo de relance, multi-coluna, drilldowns visíveis.
+        Tabular nums religioso, atalhos de teclado, sidebar persistente. Pro Luiz que prefere ver tudo a clicar pra investigar.
+      </p>
+    </div>
+  </section>
+
+  <!-- DESKTOP MOCK -->
+  <section>
+    <div class="flex items-center justify-between mb-3">
+      <div class="mono text-xs text-zinc-500 tracking-wider uppercase">desktop · 1280×</div>
+      <div class="mono text-xs text-zinc-600">Cmd+K · N · G H/F/A/T/I</div>
+    </div>
+
+    <!-- Window chrome -->
+    <div class="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950">
+      <div class="flex items-center gap-2 px-4 py-2.5 border-b border-zinc-900 bg-zinc-950">
+        <span class="size-2.5 rounded-full bg-zinc-700"></span>
+        <span class="size-2.5 rounded-full bg-zinc-700"></span>
+        <span class="size-2.5 rounded-full bg-zinc-700"></span>
+        <span class="ml-3 text-xs mono text-zinc-600">agendario.app/dashboard</span>
+      </div>
+
+      <div class="overflow-auto scrollbar-thin">
+        <div class="device-desktop flex">
+
+          <!-- Sidebar -->
+          <aside class="w-[200px] shrink-0 border-r border-zinc-900 bg-zinc-950 py-5 flex flex-col">
+            <div class="px-5 mb-7">
+              <div class="text-[15px] font-semibold tracking-tight">Agendario</div>
+              <div class="mt-3 flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-zinc-800 bg-zinc-900/50 text-xs text-zinc-500">
+                <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <span class="flex-1 mono">Buscar</span>
+                <span class="mono text-[10px] px-1 py-0.5 rounded bg-zinc-800 text-zinc-400">⌘K</span>
+              </div>
+            </div>
+
+            <nav class="px-2.5 space-y-0.5 text-sm">
+              <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md bg-zinc-900 text-zinc-100">
+                <svg class="size-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                Home
+                <span class="ml-auto mono text-[10px] text-zinc-600">G H</span>
+              </a>
+              <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-zinc-400 hover:bg-zinc-900/60">
+                <svg class="size-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9.5h4.5a2.5 2.5 0 0 1 0 5h-5"/></svg>
+                Finanças
+                <span class="ml-auto mono text-[10px] text-zinc-600">G F</span>
+              </a>
+              <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-zinc-400 hover:bg-zinc-900/60">
+                <svg class="size-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                Agenda
+                <span class="ml-auto mono text-[10px] text-zinc-600">G A</span>
+              </a>
+              <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-zinc-400 hover:bg-zinc-900/60">
+                <svg class="size-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Tasks
+                <span class="ml-auto mono text-[10px] text-zinc-600">G T</span>
+              </a>
+              <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-zinc-400 hover:bg-zinc-900/60">
+                <svg class="size-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/></svg>
+                Inbox
+                <span class="ml-auto mono text-[10px] px-1 rounded bg-amber-500/15 text-amber-300">3</span>
+              </a>
+              <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-zinc-400 hover:bg-zinc-900/60">
+                <svg class="size-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v2M12 20v2M5 5l1.5 1.5M17.5 17.5 19 19M2 12h2M20 12h2M5 19l1.5-1.5M17.5 6.5 19 5"/><circle cx="12" cy="12" r="4"/></svg>
+                Insights
+              </a>
+            </nav>
+
+            <div class="mt-auto px-2.5 pt-6">
+              <div class="border-t border-zinc-900 pt-4 flex items-center gap-2.5 px-2.5 text-xs">
+                <div class="size-7 rounded-full bg-zinc-800 grid place-items-center text-zinc-300 font-medium">L</div>
+                <div class="min-w-0">
+                  <div class="truncate text-zinc-300">Luiz</div>
+                  <div class="truncate text-[10px] text-zinc-600 mono">contato@…</div>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Main -->
+          <div class="flex-1 min-w-0">
+
+            <!-- Topbar -->
+            <div class="border-b border-zinc-900 px-6 py-3 flex items-center justify-between bg-zinc-950">
+              <div class="flex items-center gap-2 text-sm text-zinc-400">
+                <span>Home</span>
+                <span class="text-zinc-700">/</span>
+                <span class="text-zinc-300">Resumo</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1 mono text-[11px] text-zinc-500 px-2 py-1 rounded-md border border-zinc-800">
+                  <span class="text-zinc-400">Maio 2026</span>
+                  <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+                <button class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-amber-400 text-zinc-950 font-medium hover:bg-amber-300">
+                  <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                  Adicionar
+                  <span class="mono text-[10px] opacity-60">N</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Content grid -->
+            <div class="p-6 space-y-5">
+
+              <!-- KPI row -->
+              <div class="grid grid-cols-4 gap-3">
+                <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+                  <div class="mono text-[10px] tracking-wider uppercase text-zinc-500">saldo total</div>
+                  <div class="mt-2 text-2xl font-semibold tabnums">R$ 47.230<span class="text-zinc-500">,80</span></div>
+                  <div class="mt-1 mono text-[11px] text-emerald-400 flex items-center gap-1">
+                    <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 15 6-6 6 6"/></svg>
+                    +R$ 4.860 vs abr
+                  </div>
+                </div>
+                <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+                  <div class="mono text-[10px] tracking-wider uppercase text-zinc-500">mês corrente</div>
+                  <div class="mt-2 flex items-baseline gap-1">
+                    <span class="text-2xl font-semibold tabnums text-emerald-400">+10.050</span>
+                    <span class="text-xs text-zinc-500">líquido</span>
+                  </div>
+                  <div class="mt-1 mono text-[11px] text-zinc-500 flex items-center gap-3">
+                    <span><span class="text-emerald-400/80">+18.400</span></span>
+                    <span><span class="text-red-400/80">−8.350</span></span>
+                  </div>
+                </div>
+                <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+                  <div class="mono text-[10px] tracking-wider uppercase text-zinc-500">próx. plantão</div>
+                  <div class="mt-2 text-2xl font-semibold tracking-tight">Hoje<span class="text-zinc-500">, 19h</span></div>
+                  <div class="mt-1 mono text-[11px] text-zinc-400">Real Português · 12h</div>
+                </div>
+                <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+                  <div class="mono text-[10px] tracking-wider uppercase text-zinc-500">a receber</div>
+                  <div class="mt-2 text-2xl font-semibold tabnums">R$ 3.400</div>
+                  <div class="mt-1 mono text-[11px] text-zinc-500">2 plantões pendentes</div>
+                </div>
+              </div>
+
+              <!-- Main split: left 8 cols (transactions), right 4 cols (bills + agenda) -->
+              <div class="grid grid-cols-12 gap-3">
+
+                <!-- Transactions table -->
+                <div class="col-span-8 rounded-lg border border-zinc-800 bg-zinc-900/40">
+                  <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="text-sm font-medium">Transações</div>
+                      <div class="flex items-center gap-1 mono text-[10px]">
+                        <span class="px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-900">tabela</span>
+                        <span class="px-1.5 py-0.5 rounded text-zinc-500">lista</span>
+                        <span class="px-1.5 py-0.5 rounded text-zinc-500">calendar</span>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-[11px] mono text-zinc-500">
+                      <span>maio 2026</span>
+                      <span>·</span>
+                      <span>todas contas</span>
+                      <span>·</span>
+                      <span>+ filtro</span>
+                    </div>
+                  </div>
+                  <table class="w-full text-sm">
+                    <thead class="text-[10px] mono uppercase tracking-wider text-zinc-500 border-b border-zinc-900">
+                      <tr>
+                        <th class="text-left font-medium px-4 py-2">data</th>
+                        <th class="text-left font-medium px-4 py-2">descrição</th>
+                        <th class="text-left font-medium px-4 py-2">categoria</th>
+                        <th class="text-left font-medium px-4 py-2">conta</th>
+                        <th class="text-right font-medium px-4 py-2">valor</th>
+                      </tr>
+                    </thead>
+                    <tbody class="text-zinc-300">
+                      <tr class="border-b border-zinc-900/60 hover:bg-zinc-900/40">
+                        <td class="px-4 py-2 mono text-[11px] text-zinc-500">04 mai</td>
+                        <td class="px-4 py-2">Plantão Real Português · abril</td>
+                        <td class="px-4 py-2"><span class="text-[11px] mono text-emerald-400">income.plantão</span></td>
+                        <td class="px-4 py-2 text-zinc-400 text-[12px]">Itaú PJ</td>
+                        <td class="px-4 py-2 text-right tabnums text-emerald-400 font-medium">+ 6.400,00</td>
+                      </tr>
+                      <tr class="border-b border-zinc-900/60 hover:bg-zinc-900/40">
+                        <td class="px-4 py-2 mono text-[11px] text-zinc-500">04 mai</td>
+                        <td class="px-4 py-2">Restaurante Micale</td>
+                        <td class="px-4 py-2"><span class="text-[11px] mono text-zinc-400">alim.restaurantes</span></td>
+                        <td class="px-4 py-2 text-zinc-400 text-[12px]">Nubank</td>
+                        <td class="px-4 py-2 text-right tabnums text-red-400">− 150,00</td>
+                      </tr>
+                      <tr class="border-b border-zinc-900/60 hover:bg-zinc-900/40">
+                        <td class="px-4 py-2 mono text-[11px] text-zinc-500">03 mai</td>
+                        <td class="px-4 py-2">Posto Shell · Caxangá</td>
+                        <td class="px-4 py-2"><span class="text-[11px] mono text-zinc-400">transp.combustível</span></td>
+                        <td class="px-4 py-2 text-zinc-400 text-[12px]">Nubank</td>
+                        <td class="px-4 py-2 text-right tabnums text-red-400">− 312,00</td>
+                      </tr>
+                      <tr class="border-b border-zinc-900/60 hover:bg-zinc-900/40">
+                        <td class="px-4 py-2 mono text-[11px] text-zinc-500">02 mai</td>
+                        <td class="px-4 py-2">Spotify Family</td>
+                        <td class="px-4 py-2"><span class="text-[11px] mono text-zinc-400">streaming</span></td>
+                        <td class="px-4 py-2 text-zinc-400 text-[12px]">Nubank</td>
+                        <td class="px-4 py-2 text-right tabnums text-red-400">− 35,00</td>
+                      </tr>
+                      <tr class="border-b border-zinc-900/60 hover:bg-zinc-900/40">
+                        <td class="px-4 py-2 mono text-[11px] text-zinc-500">02 mai</td>
+                        <td class="px-4 py-2">Mercado Carrefour</td>
+                        <td class="px-4 py-2"><span class="text-[11px] mono text-zinc-400">alim.mercado</span></td>
+                        <td class="px-4 py-2 text-zinc-400 text-[12px]">Nubank</td>
+                        <td class="px-4 py-2 text-right tabnums text-red-400">− 412,90</td>
+                      </tr>
+                      <tr class="border-b border-zinc-900/60 hover:bg-zinc-900/40">
+                        <td class="px-4 py-2 mono text-[11px] text-zinc-500">01 mai</td>
+                        <td class="px-4 py-2">Plantão Albert Einstein · abril</td>
+                        <td class="px-4 py-2"><span class="text-[11px] mono text-emerald-400">income.plantão</span></td>
+                        <td class="px-4 py-2 text-zinc-400 text-[12px]">Itaú PJ</td>
+                        <td class="px-4 py-2 text-right tabnums text-emerald-400 font-medium">+ 8.000,00</td>
+                      </tr>
+                      <tr class="border-b border-zinc-900/60 hover:bg-zinc-900/40">
+                        <td class="px-4 py-2 mono text-[11px] text-zinc-500">30 abr</td>
+                        <td class="px-4 py-2">Hapvida · plano de saúde</td>
+                        <td class="px-4 py-2 flex items-center gap-1.5">
+                          <span class="text-[11px] mono text-zinc-400">saúde.plano</span>
+                          <span class="text-[9px] mono px-1 rounded border border-amber-400/30 text-amber-300">CL</span>
+                        </td>
+                        <td class="px-4 py-2 text-zinc-400 text-[12px]">Itaú PF</td>
+                        <td class="px-4 py-2 text-right tabnums text-red-400">− 780,00</td>
+                      </tr>
+                      <tr class="hover:bg-zinc-900/40">
+                        <td class="px-4 py-2 mono text-[11px] text-zinc-500">28 abr</td>
+                        <td class="px-4 py-2">Notion AI · annual prorate</td>
+                        <td class="px-4 py-2"><span class="text-[11px] mono text-zinc-400">software</span></td>
+                        <td class="px-4 py-2 text-zinc-400 text-[12px]">Nubank</td>
+                        <td class="px-4 py-2 text-right tabnums text-red-400">− 75,00</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="px-4 py-2.5 border-t border-zinc-900 flex items-center justify-between mono text-[11px] text-zinc-500">
+                    <span>8 de 142 · maio</span>
+                    <span class="text-zinc-400 hover:text-zinc-100 cursor-pointer">ver todas →</span>
+                  </div>
+                </div>
+
+                <!-- Right column -->
+                <div class="col-span-4 space-y-3">
+
+                  <!-- Bills -->
+                  <div class="rounded-lg border border-zinc-800 bg-zinc-900/40">
+                    <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+                      <div class="text-sm font-medium">Próximos vencimentos</div>
+                      <span class="mono text-[10px] text-zinc-500">5</span>
+                    </div>
+                    <div class="divide-y divide-zinc-900/60">
+                      <div class="px-4 py-2.5 flex items-center justify-between hover:bg-zinc-900/40">
+                        <div class="min-w-0">
+                          <div class="text-sm">Fatura Nubank</div>
+                          <div class="mono text-[10px] text-amber-300">vence em 3d · 08 mai</div>
+                        </div>
+                        <div class="tabnums text-sm">R$ 2.340</div>
+                      </div>
+                      <div class="px-4 py-2.5 flex items-center justify-between hover:bg-zinc-900/40">
+                        <div class="min-w-0">
+                          <div class="text-sm">Plano Hapvida</div>
+                          <div class="mono text-[10px] text-zinc-500">vence em 5d · 10 mai</div>
+                        </div>
+                        <div class="tabnums text-sm">R$ 780</div>
+                      </div>
+                      <div class="px-4 py-2.5 flex items-center justify-between hover:bg-zinc-900/40">
+                        <div class="min-w-0">
+                          <div class="text-sm">Spotify Family</div>
+                          <div class="mono text-[10px] text-zinc-500">vence em 8d · 13 mai</div>
+                        </div>
+                        <div class="tabnums text-sm">R$ 35</div>
+                      </div>
+                      <div class="px-4 py-2.5 flex items-center justify-between hover:bg-zinc-900/40">
+                        <div class="min-w-0">
+                          <div class="text-sm">Condomínio</div>
+                          <div class="mono text-[10px] text-zinc-500">vence em 12d · 17 mai</div>
+                        </div>
+                        <div class="tabnums text-sm">R$ 1.200</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Agenda -->
+                  <div class="rounded-lg border border-zinc-800 bg-zinc-900/40">
+                    <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+                      <div class="text-sm font-medium">Próximos plantões</div>
+                      <span class="mono text-[10px] text-zinc-500">7d</span>
+                    </div>
+                    <div class="px-4 py-3 space-y-2 text-sm">
+                      <div class="flex items-baseline gap-3">
+                        <span class="mono text-[10px] uppercase tracking-wider text-zinc-500 w-12 shrink-0">hoje</span>
+                        <span class="flex-1 truncate">Real Português</span>
+                        <span class="mono text-[11px] text-zinc-400">19h→07h</span>
+                      </div>
+                      <div class="flex items-baseline gap-3">
+                        <span class="mono text-[10px] uppercase tracking-wider text-zinc-500 w-12 shrink-0">qui</span>
+                        <span class="flex-1 truncate">Albert Einstein</span>
+                        <span class="mono text-[11px] text-zinc-400">07h→19h</span>
+                      </div>
+                      <div class="flex items-baseline gap-3">
+                        <span class="mono text-[10px] uppercase tracking-wider text-zinc-500 w-12 shrink-0">sáb</span>
+                        <span class="flex-1 truncate">Hapvida Boa Viagem</span>
+                        <span class="mono text-[11px] text-zinc-400">19h→07h</span>
+                      </div>
+                      <div class="flex items-baseline gap-3">
+                        <span class="mono text-[10px] uppercase tracking-wider text-zinc-500 w-12 shrink-0">dom</span>
+                        <span class="flex-1 truncate">UPA Caxangá</span>
+                        <span class="mono text-[11px] text-zinc-400">07h→19h</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Lower row: cards · top categorias · assinaturas -->
+              <div class="grid grid-cols-12 gap-3">
+
+                <!-- Credit cards -->
+                <div class="col-span-4 rounded-lg border border-zinc-800 bg-zinc-900/40">
+                  <div class="px-4 py-3 border-b border-zinc-800 flex items-center gap-2">
+                    <div class="text-sm font-medium">Cartões</div>
+                    <div class="ml-auto flex gap-1 mono text-[10px]">
+                      <span class="px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-900">Nubank</span>
+                      <span class="px-1.5 py-0.5 rounded text-zinc-500">Latam</span>
+                    </div>
+                  </div>
+                  <div class="px-4 py-3 space-y-3">
+                    <div>
+                      <div class="flex items-baseline justify-between">
+                        <span class="text-xs text-zinc-500">fatura aberta</span>
+                        <span class="mono text-[11px] text-amber-300">vence 08 mai</span>
+                      </div>
+                      <div class="mt-1 flex items-baseline gap-2">
+                        <span class="text-xl font-semibold tabnums">R$ 2.340</span>
+                        <span class="text-xs text-zinc-500 tabnums">/ R$ 8.000</span>
+                      </div>
+                    </div>
+                    <div class="space-y-1">
+                      <div class="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                        <div class="h-full w-[29%] bg-amber-400/80"></div>
+                      </div>
+                      <div class="flex items-center justify-between mono text-[10px] text-zinc-500">
+                        <span>29% usado</span>
+                        <span>R$ 5.660 disp.</span>
+                      </div>
+                    </div>
+                    <div class="pt-2 border-t border-zinc-900 space-y-1.5 text-[12px]">
+                      <div class="flex items-center justify-between">
+                        <span class="text-zinc-400">Macbook · 8/12</span>
+                        <span class="tabnums text-zinc-300">R$ 891</span>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-zinc-400">Estetoscópio · 2/3</span>
+                        <span class="tabnums text-zinc-300">R$ 480</span>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-zinc-400">Curso UTI · 4/6</span>
+                        <span class="tabnums text-zinc-300">R$ 320</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Top categories -->
+                <div class="col-span-4 rounded-lg border border-zinc-800 bg-zinc-900/40">
+                  <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+                    <div class="text-sm font-medium">Top categorias · maio</div>
+                    <span class="mono text-[10px] text-zinc-500">expense</span>
+                  </div>
+                  <div class="px-4 py-3 space-y-2.5 text-sm">
+                    <div>
+                      <div class="flex items-baseline justify-between mb-1">
+                        <span>Restaurantes</span>
+                        <span class="tabnums">R$ 820</span>
+                      </div>
+                      <div class="h-1 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full w-[100%] bg-zinc-300"></div></div>
+                    </div>
+                    <div>
+                      <div class="flex items-baseline justify-between mb-1">
+                        <span>Combustível</span>
+                        <span class="tabnums">R$ 480</span>
+                      </div>
+                      <div class="h-1 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full w-[59%] bg-zinc-400"></div></div>
+                    </div>
+                    <div>
+                      <div class="flex items-baseline justify-between mb-1">
+                        <span>Mercado</span>
+                        <span class="tabnums">R$ 410</span>
+                      </div>
+                      <div class="h-1 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full w-[50%] bg-zinc-500"></div></div>
+                    </div>
+                    <div>
+                      <div class="flex items-baseline justify-between mb-1">
+                        <span class="flex items-center gap-1.5">Saúde <span class="text-[9px] mono px-1 rounded border border-amber-400/30 text-amber-300">CL</span></span>
+                        <span class="tabnums">R$ 220</span>
+                      </div>
+                      <div class="h-1 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full w-[27%] bg-zinc-600"></div></div>
+                    </div>
+                    <div>
+                      <div class="flex items-baseline justify-between mb-1">
+                        <span>Streaming</span>
+                        <span class="tabnums">R$ 85</span>
+                      </div>
+                      <div class="h-1 rounded-full bg-zinc-800 overflow-hidden"><div class="h-full w-[10%] bg-zinc-700"></div></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Subscriptions -->
+                <div class="col-span-4 rounded-lg border border-zinc-800 bg-zinc-900/40">
+                  <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+                    <div>
+                      <div class="text-sm font-medium">Assinaturas</div>
+                      <div class="mono text-[10px] text-zinc-500 mt-0.5">5 ativas · R$ 187/mês</div>
+                    </div>
+                    <span class="mono text-[10px] text-zinc-400 hover:text-zinc-100 cursor-pointer">+ ver</span>
+                  </div>
+                  <div class="px-4 py-3 space-y-1.5 text-sm">
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2"><span class="size-1.5 rounded-full bg-emerald-500"></span>Spotify Family</span>
+                      <span class="tabnums text-zinc-300">R$ 35</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2"><span class="size-1.5 rounded-full bg-red-500"></span>Netflix Premium</span>
+                      <span class="tabnums text-zinc-300">R$ 65</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2"><span class="size-1.5 rounded-full bg-zinc-400"></span>iCloud 200GB</span>
+                      <span class="tabnums text-zinc-300">R$ 12</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2"><span class="size-1.5 rounded-full bg-zinc-300"></span>Notion AI</span>
+                      <span class="tabnums text-zinc-300">R$ 75</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2"><span class="size-1.5 rounded-full bg-violet-400"></span>Github Copilot</span>
+                      <span class="tabnums text-zinc-300">R$ 0 *</span>
+                    </div>
+                    <div class="text-[10px] mono text-zinc-600 pt-1">* incluído no plano edu</div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Insights & carnê-leão -->
+              <div class="grid grid-cols-12 gap-3">
+                <div class="col-span-7 rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+                  <div class="flex items-start gap-3">
+                    <div class="size-8 shrink-0 rounded-md bg-violet-500/15 grid place-items-center">
+                      <svg class="size-4 text-violet-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21V13a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v8M3 12a9 9 0 1 1 18 0"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="mono text-[10px] tracking-wider uppercase text-violet-400/80 mb-1">insight · 4 mai</div>
+                      <div class="text-sm">
+                        Você gastou <span class="font-semibold text-zinc-100">38% mais em delivery</span> em maio comparado ao mesmo período de abril. Pico foi semana 2 com R$ 320 só em iFood.
+                      </div>
+                      <div class="mt-2 flex items-center gap-3 text-xs">
+                        <button class="text-zinc-300 hover:text-zinc-100">ver detalhes →</button>
+                        <button class="text-zinc-500 hover:text-zinc-400">dispensar</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-span-5 rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+                  <div class="flex items-baseline justify-between mb-2">
+                    <div class="text-sm font-medium">Carnê-leão 2026 <span class="text-[10px] mono px-1 rounded border border-amber-400/30 text-amber-300 ml-1">CL</span></div>
+                    <span class="mono text-[10px] text-zinc-500">acumulado</span>
+                  </div>
+                  <div class="text-2xl font-semibold tabnums">R$ 13.400</div>
+                  <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[12px]">
+                    <span class="text-zinc-400">Plano de saúde</span><span class="tabnums text-right">6.500</span>
+                    <span class="text-zinc-400">Consultórios</span><span class="tabnums text-right">4.200</span>
+                    <span class="text-zinc-400">Equipamentos</span><span class="tabnums text-right">1.800</span>
+                    <span class="text-zinc-400">Congressos</span><span class="tabnums text-right">900</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOBILE MOCK -->
+  <section>
+    <div class="flex items-center justify-between mb-3">
+      <div class="mono text-xs text-zinc-500 tracking-wider uppercase">mobile · 375×</div>
+      <div class="mono text-xs text-zinc-600">bottom nav · FAB · swipe</div>
+    </div>
+
+    <div class="flex flex-wrap gap-6">
+
+      <!-- Phone 1: Home -->
+      <div class="device-mobile">
+        <div class="rounded-[2.4rem] border border-zinc-800 bg-zinc-950 p-2.5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_30px_60px_-30px_rgba(0,0,0,0.8)]">
+          <div class="rounded-[1.95rem] overflow-hidden bg-zinc-950 relative" style="height:760px;">
+            <!-- Notch -->
+            <div class="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-6 rounded-2xl bg-zinc-950 z-30"></div>
+            <!-- Status bar -->
+            <div class="px-7 pt-3 pb-1 flex items-center justify-between text-[10px] mono text-zinc-300 relative z-20">
+              <span>9:41</span>
+              <span class="flex items-center gap-1.5">
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-500"></span>
+              </span>
+            </div>
+
+            <!-- Screen content (scrollable) -->
+            <div class="overflow-y-auto scrollbar-thin h-[680px] pb-20">
+              <!-- Header -->
+              <div class="px-4 pt-4 pb-3 flex items-center justify-between">
+                <div>
+                  <div class="text-[11px] mono text-zinc-500">qua · 5 mai</div>
+                  <div class="text-lg font-semibold tracking-tight">Bom dia, Luiz</div>
+                </div>
+                <button class="size-8 rounded-full border border-zinc-800 grid place-items-center text-zinc-400">
+                  <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                </button>
+              </div>
+
+              <!-- KPI grid 2x2 -->
+              <div class="px-4 grid grid-cols-2 gap-2 mb-3">
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
+                  <div class="mono text-[9px] tracking-wider uppercase text-zinc-500">saldo</div>
+                  <div class="mt-1 text-lg font-semibold tabnums">R$ 47.230</div>
+                  <div class="mono text-[10px] text-emerald-400">+10% mês</div>
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
+                  <div class="mono text-[9px] tracking-wider uppercase text-zinc-500">mês</div>
+                  <div class="mt-1 text-lg font-semibold tabnums text-emerald-400">+10.050</div>
+                  <div class="mono text-[10px] text-zinc-500">+18.4 / −8.3</div>
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
+                  <div class="mono text-[9px] tracking-wider uppercase text-zinc-500">próx. plantão</div>
+                  <div class="mt-1 text-base font-semibold">Hoje 19h</div>
+                  <div class="mono text-[10px] text-zinc-500">Real · 12h</div>
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
+                  <div class="mono text-[9px] tracking-wider uppercase text-zinc-500">a receber</div>
+                  <div class="mt-1 text-lg font-semibold tabnums">R$ 3.400</div>
+                  <div class="mono text-[10px] text-zinc-500">2 plantões</div>
+                </div>
+              </div>
+
+              <!-- Bills strip -->
+              <div class="px-4 mb-3">
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+                  <div class="px-3 py-2.5 border-b border-zinc-900 flex items-center justify-between">
+                    <span class="text-xs font-medium">Vencimentos</span>
+                    <span class="mono text-[10px] text-amber-300">3d até Nubank</span>
+                  </div>
+                  <div class="divide-y divide-zinc-900/60 text-sm">
+                    <div class="px-3 py-2 flex items-center justify-between">
+                      <div>
+                        <div class="text-[13px]">Fatura Nubank</div>
+                        <div class="mono text-[10px] text-amber-300">08 mai · 3d</div>
+                      </div>
+                      <div class="tabnums text-[13px]">R$ 2.340</div>
+                    </div>
+                    <div class="px-3 py-2 flex items-center justify-between">
+                      <div>
+                        <div class="text-[13px]">Plano Hapvida</div>
+                        <div class="mono text-[10px] text-zinc-500">10 mai · 5d</div>
+                      </div>
+                      <div class="tabnums text-[13px]">R$ 780</div>
+                    </div>
+                    <div class="px-3 py-2 flex items-center justify-between">
+                      <div>
+                        <div class="text-[13px]">Spotify Family</div>
+                        <div class="mono text-[10px] text-zinc-500">13 mai · 8d</div>
+                      </div>
+                      <div class="tabnums text-[13px]">R$ 35</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Transactions list (compact) -->
+              <div class="px-4 mb-3">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-medium">Transações</span>
+                  <span class="mono text-[10px] text-zinc-500">maio</span>
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 divide-y divide-zinc-900/60">
+                  <div class="px-3 py-2.5 flex items-center justify-between">
+                    <div class="min-w-0">
+                      <div class="text-[13px] truncate">Plantão Real Português</div>
+                      <div class="mono text-[10px] text-zinc-500">04 mai · income.plantão</div>
+                    </div>
+                    <div class="tabnums text-[13px] text-emerald-400 font-medium">+ 6.400</div>
+                  </div>
+                  <div class="px-3 py-2.5 flex items-center justify-between">
+                    <div class="min-w-0">
+                      <div class="text-[13px] truncate">Restaurante Micale</div>
+                      <div class="mono text-[10px] text-zinc-500">04 mai · alim.restaurantes</div>
+                    </div>
+                    <div class="tabnums text-[13px] text-red-400">− 150</div>
+                  </div>
+                  <div class="px-3 py-2.5 flex items-center justify-between">
+                    <div class="min-w-0">
+                      <div class="text-[13px] truncate">Posto Shell · Caxangá</div>
+                      <div class="mono text-[10px] text-zinc-500">03 mai · transp.combustível</div>
+                    </div>
+                    <div class="tabnums text-[13px] text-red-400">− 312</div>
+                  </div>
+                  <div class="px-3 py-2.5 flex items-center justify-between">
+                    <div class="min-w-0">
+                      <div class="text-[13px] truncate">Mercado Carrefour</div>
+                      <div class="mono text-[10px] text-zinc-500">02 mai · alim.mercado</div>
+                    </div>
+                    <div class="tabnums text-[13px] text-red-400">− 412,90</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card -->
+              <div class="px-4 mb-3">
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium">Nubank · fatura aberta</span>
+                    <span class="mono text-[10px] text-amber-300">vence 08 mai</span>
+                  </div>
+                  <div class="mt-2 flex items-baseline gap-2">
+                    <span class="text-xl font-semibold tabnums">R$ 2.340</span>
+                    <span class="text-xs text-zinc-500 tabnums">/ 8.000</span>
+                  </div>
+                  <div class="mt-2 h-1 rounded-full bg-zinc-800 overflow-hidden">
+                    <div class="h-full w-[29%] bg-amber-400/80"></div>
+                  </div>
+                  <div class="mt-1 mono text-[10px] text-zinc-500 flex justify-between">
+                    <span>29% usado</span><span>3 parcelamentos</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- FAB -->
+            <button class="absolute bottom-20 right-4 size-12 rounded-full bg-amber-400 text-zinc-950 grid place-items-center shadow-lg shadow-amber-400/20 z-10">
+              <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+
+            <!-- Bottom nav -->
+            <div class="absolute bottom-0 left-0 right-0 bg-zinc-950/95 backdrop-blur border-t border-zinc-900 z-20">
+              <div class="grid grid-cols-5 px-2 pt-2 pb-5">
+                <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-100">
+                  <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                  Home
+                </button>
+                <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-500">
+                  <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9 9.5h4.5a2.5 2.5 0 0 1 0 5h-5"/></svg>
+                  Finanças
+                </button>
+                <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-500">
+                  <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                  Agenda
+                </button>
+                <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-500">
+                  <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  Tasks
+                </button>
+                <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-500">
+                  <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                  Mais
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="mt-3 text-center mono text-[11px] text-zinc-500">Home</div>
+      </div>
+
+      <!-- Phone 2: Quick Add modal -->
+      <div class="device-mobile">
+        <div class="rounded-[2.4rem] border border-zinc-800 bg-zinc-950 p-2.5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_30px_60px_-30px_rgba(0,0,0,0.8)]">
+          <div class="rounded-[1.95rem] overflow-hidden bg-zinc-950 relative" style="height:760px;">
+            <div class="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-6 rounded-2xl bg-zinc-950 z-30"></div>
+            <div class="px-7 pt-3 pb-1 flex items-center justify-between text-[10px] mono text-zinc-300 relative z-20">
+              <span>9:41</span>
+              <span class="flex items-center gap-1.5">
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-500"></span>
+              </span>
+            </div>
+
+            <!-- Backdrop with blurred home behind -->
+            <div class="h-[680px] relative bg-zinc-950">
+              <!-- Faded background -->
+              <div class="absolute inset-0 opacity-30 pointer-events-none">
+                <div class="px-4 pt-4 pb-3"><div class="h-4 w-32 bg-zinc-800 rounded"></div></div>
+                <div class="px-4 grid grid-cols-2 gap-2">
+                  <div class="h-16 rounded-xl bg-zinc-900/50"></div>
+                  <div class="h-16 rounded-xl bg-zinc-900/50"></div>
+                  <div class="h-16 rounded-xl bg-zinc-900/50"></div>
+                  <div class="h-16 rounded-xl bg-zinc-900/50"></div>
+                </div>
+              </div>
+
+              <!-- Sheet -->
+              <div class="absolute bottom-0 left-0 right-0 rounded-t-3xl bg-zinc-900 border-t border-zinc-800 p-4 pb-7 z-10">
+                <div class="mx-auto w-10 h-1 rounded-full bg-zinc-700 mb-4"></div>
+                <div class="mb-3 flex items-center justify-between">
+                  <h3 class="text-base font-semibold tracking-tight">Capturar</h3>
+                  <span class="mono text-[10px] text-zinc-500">enter pra confirmar</span>
+                </div>
+
+                <div class="rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-3">
+                  <div class="text-[15px] text-zinc-100">
+                    Gastei 312 reais no posto Shell ontem<span class="inline-block w-0.5 h-4 bg-amber-400 ml-0.5 align-middle"></span>
+                  </div>
+                </div>
+
+                <div class="mt-3 mono text-[10px] tracking-wider uppercase text-zinc-500 mb-2">preview</div>
+
+                <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] mono text-emerald-300 uppercase tracking-wider">expense</span>
+                    <span class="mono text-[10px] text-emerald-400">conf. 0.94</span>
+                  </div>
+                  <div class="flex items-baseline justify-between">
+                    <span class="text-[15px]">Posto Shell</span>
+                    <span class="text-lg font-semibold tabnums text-red-400">− R$ 312,00</span>
+                  </div>
+                  <div class="mono text-[10px] text-zinc-400 flex items-center gap-2">
+                    <span>04 mai</span><span class="text-zinc-700">·</span>
+                    <span>transp.combustível</span><span class="text-zinc-700">·</span>
+                    <span>Nubank</span>
+                  </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-3 gap-2">
+                  <button class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs">Editar</button>
+                  <button class="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-zinc-400">Cancelar</button>
+                  <button class="rounded-lg bg-amber-400 text-zinc-950 px-3 py-2.5 text-xs font-medium">Confirmar</button>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-zinc-800">
+                  <div class="mono text-[10px] uppercase tracking-wider text-zinc-500 mb-2">favoritos</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span class="text-[11px] px-2 py-1 rounded-full border border-zinc-800 text-zinc-300">⛽ Combustível R$ 300</span>
+                    <span class="text-[11px] px-2 py-1 rounded-full border border-zinc-800 text-zinc-300">🍽️ Almoço hospital</span>
+                    <span class="text-[11px] px-2 py-1 rounded-full border border-zinc-800 text-zinc-300">☕ Café Café Café</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="mt-3 text-center mono text-[11px] text-zinc-500">Quick Add (sheet)</div>
+      </div>
+
+      <!-- Phone 3: Transactions list with swipe -->
+      <div class="device-mobile">
+        <div class="rounded-[2.4rem] border border-zinc-800 bg-zinc-950 p-2.5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_30px_60px_-30px_rgba(0,0,0,0.8)]">
+          <div class="rounded-[1.95rem] overflow-hidden bg-zinc-950 relative" style="height:760px;">
+            <div class="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-6 rounded-2xl bg-zinc-950 z-30"></div>
+            <div class="px-7 pt-3 pb-1 flex items-center justify-between text-[10px] mono text-zinc-300 relative z-20">
+              <span>9:41</span>
+              <span class="flex items-center gap-1.5">
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-500"></span>
+              </span>
+            </div>
+
+            <div class="h-[680px] flex flex-col">
+              <!-- Header -->
+              <div class="px-4 pt-4 pb-3 flex items-center justify-between border-b border-zinc-900">
+                <div>
+                  <div class="text-[10px] mono text-zinc-500">finanças</div>
+                  <div class="text-base font-semibold">Transações</div>
+                </div>
+                <div class="flex gap-1.5 mono text-[10px]">
+                  <span class="px-2 py-1 rounded-full bg-zinc-100 text-zinc-900">tabela</span>
+                  <span class="px-2 py-1 rounded-full text-zinc-500">cal</span>
+                </div>
+              </div>
+
+              <!-- Filter pill -->
+              <div class="px-4 py-3 flex items-center gap-1.5 overflow-x-auto scrollbar-thin">
+                <span class="shrink-0 text-[11px] px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-900">maio</span>
+                <span class="shrink-0 text-[11px] px-2.5 py-1 rounded-full border border-zinc-800 text-zinc-300">todas contas</span>
+                <span class="shrink-0 text-[11px] px-2.5 py-1 rounded-full border border-zinc-800 text-zinc-500">+ filtro</span>
+              </div>
+
+              <!-- List with swipe state -->
+              <div class="flex-1 overflow-y-auto px-4 pb-3 space-y-1.5">
+                <!-- Normal -->
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 flex items-center justify-between">
+                  <div class="min-w-0">
+                    <div class="text-[13px]">Plantão Real Português</div>
+                    <div class="mono text-[10px] text-zinc-500">04 mai · income.plantão</div>
+                  </div>
+                  <div class="tabnums text-[13px] text-emerald-400 font-medium">+ 6.400,00</div>
+                </div>
+
+                <!-- Swipe-right active (showing confirm action revealed) -->
+                <div class="relative rounded-xl overflow-hidden">
+                  <div class="absolute inset-y-0 left-0 right-0 bg-emerald-500/20 flex items-center px-4">
+                    <span class="mono text-[11px] text-emerald-300 flex items-center gap-1.5">
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+                      Confirmar categoria
+                    </span>
+                  </div>
+                  <div class="relative rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 flex items-center justify-between translate-x-16">
+                    <div class="min-w-0">
+                      <div class="text-[13px]">Restaurante Micale</div>
+                      <div class="mono text-[10px] text-zinc-500">04 mai · alim.restaurantes</div>
+                    </div>
+                    <div class="tabnums text-[13px] text-red-400">− 150,00</div>
+                  </div>
+                </div>
+
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 flex items-center justify-between">
+                  <div class="min-w-0">
+                    <div class="text-[13px]">Posto Shell · Caxangá</div>
+                    <div class="mono text-[10px] text-zinc-500">03 mai · transp.combustível</div>
+                  </div>
+                  <div class="tabnums text-[13px] text-red-400">− 312,00</div>
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 flex items-center justify-between">
+                  <div class="min-w-0">
+                    <div class="text-[13px]">Spotify Family</div>
+                    <div class="mono text-[10px] text-zinc-500">02 mai · streaming</div>
+                  </div>
+                  <div class="tabnums text-[13px] text-red-400">− 35,00</div>
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 flex items-center justify-between">
+                  <div class="min-w-0">
+                    <div class="text-[13px]">Mercado Carrefour</div>
+                    <div class="mono text-[10px] text-zinc-500">02 mai · alim.mercado</div>
+                  </div>
+                  <div class="tabnums text-[13px] text-red-400">− 412,90</div>
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 flex items-center justify-between">
+                  <div class="min-w-0">
+                    <div class="text-[13px]">Plantão Albert Einstein</div>
+                    <div class="mono text-[10px] text-zinc-500">01 mai · income.plantão</div>
+                  </div>
+                  <div class="tabnums text-[13px] text-emerald-400 font-medium">+ 8.000,00</div>
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 flex items-center justify-between">
+                  <div class="min-w-0">
+                    <div class="text-[13px] flex items-center gap-1.5">Hapvida <span class="text-[9px] mono px-1 rounded border border-amber-400/30 text-amber-300">CL</span></div>
+                    <div class="mono text-[10px] text-zinc-500">30 abr · saúde.plano</div>
+                  </div>
+                  <div class="tabnums text-[13px] text-red-400">− 780,00</div>
+                </div>
+              </div>
+
+              <!-- Bottom nav -->
+              <div class="bg-zinc-950/95 backdrop-blur border-t border-zinc-900">
+                <div class="grid grid-cols-5 px-2 pt-2 pb-5">
+                  <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-500">
+                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home
+                  </button>
+                  <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-100">
+                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9 9.5h4.5a2.5 2.5 0 0 1 0 5h-5"/></svg>Finanças
+                  </button>
+                  <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-500">
+                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Agenda
+                  </button>
+                  <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-500">
+                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Tasks
+                  </button>
+                  <button class="flex flex-col items-center gap-0.5 text-[10px] text-zinc-500">
+                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>Mais
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="mt-3 text-center mono text-[11px] text-zinc-500">Transações + swipe</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Notes -->
+  <section class="border-t border-zinc-900 pt-10 max-w-3xl">
+    <div class="mono text-[10px] uppercase tracking-wider text-zinc-500 mb-3">notas de design</div>
+    <ul class="space-y-2 text-sm text-zinc-300">
+      <li class="flex gap-3"><span class="text-amber-400">·</span> Tabular nums em todo dado financeiro · separador BR (R$ 1.234,56)</li>
+      <li class="flex gap-3"><span class="text-amber-400">·</span> Categorias slug-style mono (alim.restaurantes) — leitura tipo terminal</li>
+      <li class="flex gap-3"><span class="text-amber-400">·</span> Badge <span class="text-[9px] mono px-1 rounded border border-amber-400/30 text-amber-300">CL</span> sinaliza dedutível carnê-leão</li>
+      <li class="flex gap-3"><span class="text-amber-400">·</span> Atalhos visíveis (G H, Cmd+K, N) · keyboard-first no desktop</li>
+      <li class="flex gap-3"><span class="text-amber-400">·</span> Mobile herda densidade mas reorganiza em pilha · swipe-right confirma · swipe-left arquiva</li>
+    </ul>
+  </section>
+
+  <footer class="pt-8 pb-12 mono text-[10px] text-zinc-600">
+    01 — cockpit · <a href="native.html" class="text-emerald-400/80 hover:text-emerald-400">próxima: native →</a>
+  </footer>
+
+</main>
+</body>
+</html>

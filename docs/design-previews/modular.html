@@ -1,0 +1,1028 @@
+<!doctype html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Modular · Agendario</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Recursive:slnt,wght,CASL,CRSV,MONO@-15..0,300..900,0..1,0..1,0..1&display=swap" rel="stylesheet">
+<style>
+  :root { color-scheme: dark; }
+  body {
+    font-family: 'Recursive', system-ui, sans-serif;
+    background: oklch(0.165 0.005 280);
+    font-variation-settings: "MONO" 0, "CASL" 0;
+  }
+  .casual { font-variation-settings: "MONO" 0, "CASL" 0.5; }
+  .mono { font-family: 'Recursive', monospace; font-variation-settings: "MONO" 1, "CASL" 0; }
+  .slant { font-style: italic; font-variation-settings: "MONO" 0, "CASL" 0, "slnt" -10; }
+  .tabnums { font-variant-numeric: tabular-nums; }
+  .surface { background: oklch(0.205 0.006 280); }
+  .surface-2 { background: oklch(0.235 0.007 280); }
+  .border-soft { border-color: oklch(0.255 0.008 280); }
+  .border-strong { border-color: oklch(0.32 0.012 280); }
+  .text-soft { color: oklch(0.7 0.01 280); }
+  .text-mute { color: oklch(0.55 0.01 280); }
+  .text-faint { color: oklch(0.42 0.01 280); }
+  .accent { color: oklch(0.78 0.16 295); }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 999px; }
+  .device-mobile { width: 375px; }
+  .device-desktop { width: 1280px; }
+
+  /* Block hover handle */
+  .block { position: relative; }
+  .block-handle {
+    position: absolute; top: 14px; left: -24px;
+    opacity: 0; transition: opacity 0.15s ease;
+    display: flex; gap: 2px;
+  }
+  .block:hover .block-handle { opacity: 0.5; }
+  .block:hover .block-handle:hover { opacity: 1; }
+
+  /* View pill active */
+  .view-pill-active { background: oklch(0.78 0.16 295 / 0.15); color: oklch(0.85 0.14 295); border-color: oklch(0.78 0.16 295 / 0.3); }
+</style>
+</head>
+<body class="text-zinc-100 min-h-dvh">
+
+<!-- Top bar -->
+<header class="sticky top-0 z-50 border-b border-soft" style="background: oklch(0.165 0.005 280 / 0.9); backdrop-filter: blur(12px);">
+  <div class="mx-auto max-w-[1500px] px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="flex items-center gap-1.5 text-sm text-soft hover:text-zinc-100">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 19l-7-7 7-7"/></svg>
+        voltar
+      </a>
+      <span class="text-faint">/</span>
+      <span class="text-sm text-soft mono">03 — modular</span>
+    </div>
+    <div class="flex items-center gap-3 text-xs text-faint mono">
+      <a href="native.html" class="text-emerald-400/80 hover:text-emerald-400">← native</a>
+    </div>
+  </div>
+</header>
+
+<main class="mx-auto max-w-[1500px] px-6 py-12 space-y-20">
+
+  <!-- Intro -->
+  <section class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
+    <div>
+      <div class="mono text-[10px] tracking-wider uppercase accent">03 — modularidade</div>
+      <h1 class="mt-2 text-4xl font-semibold tracking-tight">Modular</h1>
+    </div>
+    <div class="md:col-span-2">
+      <p class="text-soft text-base leading-relaxed">
+        Inspirado em Notion + Things. Blocos rearranjáveis, multiple views por entidade, command palette como
+        principal forma de ação, sidebar com workspaces. Para quem quer customizar o app à própria rotina —
+        ano que vem você quer outra coisa, mexe nos blocos sem precisar de feature.
+      </p>
+    </div>
+  </section>
+
+  <!-- DESKTOP MOCK -->
+  <section>
+    <div class="flex items-center justify-between mb-3">
+      <div class="mono text-xs text-faint tracking-wider uppercase">desktop · 1280×</div>
+      <div class="mono text-xs text-faint">⌘K destacado · drag handles · view switcher</div>
+    </div>
+
+    <div class="rounded-2xl overflow-hidden border border-soft" style="background: oklch(0.16 0.005 280); box-shadow: 0 30px 80px -40px rgba(0,0,0,0.7);">
+      <!-- Window chrome -->
+      <div class="flex items-center gap-2 px-4 py-2.5 border-b border-soft">
+        <span class="size-2.5 rounded-full" style="background: oklch(0.4 0.005 280);"></span>
+        <span class="size-2.5 rounded-full" style="background: oklch(0.4 0.005 280);"></span>
+        <span class="size-2.5 rounded-full" style="background: oklch(0.4 0.005 280);"></span>
+        <span class="ml-3 text-xs mono text-faint">agendario.app · workspace</span>
+      </div>
+
+      <div class="overflow-auto scrollbar-thin">
+        <div class="device-desktop flex relative">
+
+          <!-- Notion-style sidebar -->
+          <aside class="w-[240px] shrink-0 border-r border-soft py-4 px-2.5" style="background: oklch(0.18 0.005 280);">
+
+            <!-- Workspace -->
+            <div class="px-2.5 py-2 mb-2 flex items-center gap-2 rounded-md hover:bg-zinc-800/50 cursor-pointer">
+              <div class="size-6 rounded grid place-items-center font-semibold text-xs" style="background: oklch(0.78 0.16 295 / 0.2); color: oklch(0.85 0.14 295);">L</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium truncate">Agendario · Luiz</div>
+              </div>
+              <svg class="size-3.5 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+
+            <!-- Search -->
+            <div class="px-2.5 mb-3">
+              <button class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md surface border border-soft text-xs text-mute hover:border-strong">
+                <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <span class="flex-1 text-left mono">Busca rápida</span>
+                <span class="mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-soft">⌘K</span>
+              </button>
+            </div>
+
+            <!-- Quick links -->
+            <nav class="space-y-0.5 mb-5">
+              <a class="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-soft hover:bg-zinc-800/50">
+                <svg class="size-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/></svg>
+                <span class="flex-1">Inbox</span>
+                <span class="mono text-[10px] px-1.5 py-0.5 rounded text-amber-300" style="background: oklch(0.5 0.18 80 / 0.18);">3</span>
+              </a>
+              <a class="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-soft hover:bg-zinc-800/50">
+                <svg class="size-4 text-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span class="flex-1">Today</span>
+                <span class="mono text-[10px] text-faint">4</span>
+              </a>
+            </nav>
+
+            <!-- Pages tree -->
+            <div class="space-y-0.5">
+              <div class="flex items-center justify-between px-2.5 mb-1.5">
+                <div class="mono text-[10px] uppercase tracking-wider text-faint">workspace</div>
+                <button class="text-faint hover:text-soft">
+                  <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+              </div>
+
+              <a class="flex items-center gap-2 px-2.5 py-1 rounded-md text-sm hover:bg-zinc-800/50" style="background: oklch(0.78 0.16 295 / 0.1);">
+                <svg class="size-3 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="text-base">📊</span>
+                <span class="flex-1">Dashboard</span>
+              </a>
+              <div class="ml-3 space-y-0.5 border-l border-soft pl-2">
+                <a class="flex items-center gap-2 px-2 py-1 rounded-md text-[13px] text-soft hover:bg-zinc-800/50">
+                  <span>💰</span><span class="flex-1">Finanças</span>
+                </a>
+                <a class="flex items-center gap-2 px-2 py-1 rounded-md text-[13px] text-soft hover:bg-zinc-800/50">
+                  <span>🩺</span><span class="flex-1">Plantões</span>
+                </a>
+                <a class="flex items-center gap-2 px-2 py-1 rounded-md text-[13px] text-soft hover:bg-zinc-800/50">
+                  <span>✓</span><span class="flex-1">Tasks</span>
+                </a>
+                <a class="flex items-center gap-2 px-2 py-1 rounded-md text-[13px] text-soft hover:bg-zinc-800/50">
+                  <span>💡</span><span class="flex-1">Insights</span>
+                </a>
+              </div>
+
+              <div class="px-2.5 mt-4 mb-1.5 mono text-[10px] uppercase tracking-wider text-faint">favoritos</div>
+              <a class="flex items-center gap-2 px-2.5 py-1 rounded-md text-[13px] text-soft hover:bg-zinc-800/50">
+                <span>⛽</span><span class="flex-1">Combustível R$ 300</span>
+              </a>
+              <a class="flex items-center gap-2 px-2.5 py-1 rounded-md text-[13px] text-soft hover:bg-zinc-800/50">
+                <span>🍽️</span><span class="flex-1">Almoço hospital</span>
+              </a>
+              <a class="flex items-center gap-2 px-2.5 py-1 rounded-md text-[13px] text-soft hover:bg-zinc-800/50">
+                <span>🏥</span><span class="flex-1">Plantão template</span>
+              </a>
+
+              <div class="px-2.5 mt-4 mb-1.5 mono text-[10px] uppercase tracking-wider text-faint">conexões</div>
+              <a class="flex items-center gap-2 px-2.5 py-1 rounded-md text-[13px] text-soft hover:bg-zinc-800/50">
+                <span class="size-1.5 rounded-full bg-emerald-400"></span>
+                <span class="flex-1">Telegram bot</span>
+              </a>
+              <a class="flex items-center gap-2 px-2.5 py-1 rounded-md text-[13px] text-soft hover:bg-zinc-800/50">
+                <span class="size-1.5 rounded-full bg-zinc-600"></span>
+                <span class="flex-1">Google Calendar</span>
+              </a>
+            </div>
+
+          </aside>
+
+          <!-- Main content -->
+          <div class="flex-1 min-w-0">
+
+            <!-- Page top bar (Notion-like breadcrumb + share) -->
+            <div class="px-8 py-3 flex items-center justify-between border-b border-soft">
+              <div class="flex items-center gap-1.5 text-sm text-soft">
+                <span>📊</span>
+                <span>Dashboard</span>
+                <span class="text-faint">/</span>
+                <span class="text-zinc-100">Início</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs text-mute">
+                <button class="px-2 py-1 rounded hover:bg-zinc-800/60">Histórico</button>
+                <button class="px-2 py-1 rounded hover:bg-zinc-800/60">Compartilhar</button>
+                <button class="px-2 py-1 rounded hover:bg-zinc-800/60 mono">⋯</button>
+              </div>
+            </div>
+
+            <!-- Hero / page header -->
+            <div class="px-12 pt-10 pb-6">
+              <div class="text-6xl mb-3">📊</div>
+              <h1 class="text-4xl font-bold tracking-tight">Início</h1>
+              <p class="mt-2 text-soft text-sm casual">
+                Tudo de relance, do jeito que <span class="slant">você</span> organizou.
+                Adicione, mova ou esconda blocos com <span class="mono text-xs px-1.5 py-0.5 rounded bg-zinc-800/80 text-soft">⌘K</span> · "configurar página".
+              </p>
+              <div class="mt-5 flex items-center gap-2 text-xs text-mute">
+                <span class="mono">5 maio · 14:23</span>
+                <span class="text-faint">·</span>
+                <span>última edição há 2h por Luiz</span>
+              </div>
+            </div>
+
+            <!-- Blocks -->
+            <div class="px-12 pb-10 space-y-7 relative">
+
+              <!-- Block: KPIs -->
+              <div class="block">
+                <div class="block-handle">
+                  <button class="size-5 rounded grid place-items-center text-mute hover:bg-zinc-800/60">
+                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                  </button>
+                  <button class="size-5 rounded grid place-items-center text-mute hover:bg-zinc-800/60">
+                    <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+                  </button>
+                </div>
+                <div class="grid grid-cols-4 gap-3">
+                  <div class="rounded-xl surface border border-soft p-4">
+                    <div class="mono text-[10px] uppercase tracking-wider text-faint">saldo total</div>
+                    <div class="mt-2 text-2xl font-semibold tabnums">R$ 47.230</div>
+                    <div class="mt-1 text-[11px] text-emerald-400 mono">+11,5% vs abril</div>
+                  </div>
+                  <div class="rounded-xl surface border border-soft p-4">
+                    <div class="mono text-[10px] uppercase tracking-wider text-faint">mês atual</div>
+                    <div class="mt-2 text-2xl font-semibold tabnums text-emerald-400">+10.050</div>
+                    <div class="mt-1 text-[11px] text-mute mono">37 transações</div>
+                  </div>
+                  <div class="rounded-xl surface border border-soft p-4">
+                    <div class="mono text-[10px] uppercase tracking-wider text-faint">próx plantão</div>
+                    <div class="mt-2 text-2xl font-semibold">Hoje 19h</div>
+                    <div class="mt-1 text-[11px] text-mute mono">Real Português</div>
+                  </div>
+                  <div class="rounded-xl surface border border-soft p-4">
+                    <div class="mono text-[10px] uppercase tracking-wider text-faint">a receber</div>
+                    <div class="mt-2 text-2xl font-semibold tabnums">R$ 3.400</div>
+                    <div class="mt-1 text-[11px] text-mute mono">2 pendentes</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Block: Plantões — multiple views demonstrated -->
+              <div class="block">
+                <div class="block-handle">
+                  <button class="size-5 rounded grid place-items-center text-mute hover:bg-zinc-800/60">
+                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                  </button>
+                  <button class="size-5 rounded grid place-items-center text-mute hover:bg-zinc-800/60">
+                    <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+                  </button>
+                </div>
+                <div class="rounded-xl surface border border-soft overflow-hidden">
+                  <div class="px-5 py-3 border-b border-soft flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xl">🩺</span>
+                      <h3 class="text-base font-semibold">Plantões</h3>
+                      <span class="text-xs text-mute">próximos 7d</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span class="text-[11px] mono px-2.5 py-1 rounded-md border view-pill-active">📅 calendar</span>
+                      <span class="text-[11px] mono px-2.5 py-1 rounded-md text-mute hover:bg-zinc-800/60">📋 lista</span>
+                      <span class="text-[11px] mono px-2.5 py-1 rounded-md text-mute hover:bg-zinc-800/60">🗂 kanban</span>
+                      <span class="text-[11px] mono px-2.5 py-1 rounded-md text-mute hover:bg-zinc-800/60">📊 tabela</span>
+                    </div>
+                  </div>
+                  <div class="p-5">
+                    <!-- Mini calendar week -->
+                    <div class="grid grid-cols-7 gap-2">
+                      <div class="rounded-lg surface-2 border border-soft p-2.5 min-h-[100px]">
+                        <div class="text-[10px] mono text-mute uppercase">seg</div>
+                        <div class="text-base font-semibold tabnums">04</div>
+                      </div>
+                      <div class="rounded-lg border-2 p-2.5 min-h-[100px]" style="background: oklch(0.78 0.16 295 / 0.1); border-color: oklch(0.78 0.16 295 / 0.4);">
+                        <div class="text-[10px] mono accent uppercase">hoje</div>
+                        <div class="text-base font-semibold tabnums">05</div>
+                        <div class="mt-1.5 text-[10px] rounded px-1.5 py-1" style="background: oklch(0.78 0.16 295 / 0.25); color: oklch(0.85 0.14 295);">
+                          Real · 19h
+                        </div>
+                      </div>
+                      <div class="rounded-lg surface-2 border border-soft p-2.5 min-h-[100px]">
+                        <div class="text-[10px] mono text-mute uppercase">qui</div>
+                        <div class="text-base font-semibold tabnums">06</div>
+                        <div class="mt-1.5 text-[10px] rounded px-1.5 py-1 bg-emerald-500/15 text-emerald-300">
+                          Einstein 7h
+                        </div>
+                      </div>
+                      <div class="rounded-lg surface-2 border border-soft p-2.5 min-h-[100px]">
+                        <div class="text-[10px] mono text-mute uppercase">sex</div>
+                        <div class="text-base font-semibold tabnums">07</div>
+                      </div>
+                      <div class="rounded-lg surface-2 border border-soft p-2.5 min-h-[100px]">
+                        <div class="text-[10px] mono text-mute uppercase">sáb</div>
+                        <div class="text-base font-semibold tabnums">08</div>
+                        <div class="mt-1.5 text-[10px] rounded px-1.5 py-1" style="background: oklch(0.78 0.16 295 / 0.25); color: oklch(0.85 0.14 295);">
+                          Hapvida 19h
+                        </div>
+                      </div>
+                      <div class="rounded-lg surface-2 border border-soft p-2.5 min-h-[100px]">
+                        <div class="text-[10px] mono text-mute uppercase">dom</div>
+                        <div class="text-base font-semibold tabnums">09</div>
+                        <div class="mt-1.5 text-[10px] rounded px-1.5 py-1 bg-emerald-500/15 text-emerald-300">
+                          UPA 7h
+                        </div>
+                      </div>
+                      <div class="rounded-lg surface-2 border border-soft p-2.5 min-h-[100px]">
+                        <div class="text-[10px] mono text-mute uppercase">seg</div>
+                        <div class="text-base font-semibold tabnums">10</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Two blocks: Bills + Top Categorias -->
+              <div class="grid grid-cols-2 gap-5">
+
+                <div class="block">
+                  <div class="block-handle">
+                    <button class="size-5 rounded grid place-items-center text-mute hover:bg-zinc-800/60">
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                  </div>
+                  <div class="rounded-xl surface border border-soft overflow-hidden">
+                    <div class="px-5 py-3 border-b border-soft flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xl">💸</span>
+                        <h3 class="text-base font-semibold">A pagar</h3>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <span class="text-[11px] mono px-2 py-0.5 rounded view-pill-active">lista</span>
+                        <span class="text-[11px] mono px-2 py-0.5 rounded text-mute">timeline</span>
+                      </div>
+                    </div>
+                    <div class="divide-y divide-zinc-800/60">
+                      <div class="px-5 py-3 flex items-center gap-3 hover:bg-zinc-800/30">
+                        <div class="size-7 rounded grid place-items-center font-semibold text-xs" style="background: oklch(0.5 0.18 290 / 0.18); color: oklch(0.85 0.18 290);">N</div>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-sm">Fatura Nubank</div>
+                          <div class="mono text-[10px] text-amber-300">vence em 3d</div>
+                        </div>
+                        <div class="text-sm font-medium tabnums">R$ 2.340</div>
+                      </div>
+                      <div class="px-5 py-3 flex items-center gap-3 hover:bg-zinc-800/30">
+                        <div class="size-7 rounded grid place-items-center font-semibold text-xs" style="background: oklch(0.5 0.16 25 / 0.18); color: oklch(0.85 0.14 25);">H</div>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-sm flex items-center gap-1.5">Plano Hapvida <span class="text-[9px] mono px-1 rounded border border-amber-400/30 text-amber-300">CL</span></div>
+                          <div class="mono text-[10px] text-mute">vence em 5d</div>
+                        </div>
+                        <div class="text-sm font-medium tabnums">R$ 780</div>
+                      </div>
+                      <div class="px-5 py-3 flex items-center gap-3 hover:bg-zinc-800/30">
+                        <div class="size-7 rounded grid place-items-center font-semibold text-xs" style="background: oklch(0.5 0.18 155 / 0.18); color: oklch(0.85 0.16 155);">S</div>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-sm">Spotify Family</div>
+                          <div class="mono text-[10px] text-mute">renova em 8d</div>
+                        </div>
+                        <div class="text-sm font-medium tabnums">R$ 35</div>
+                      </div>
+                      <div class="px-5 py-3 hover:bg-zinc-800/30">
+                        <button class="text-xs text-mute hover:text-soft flex items-center gap-1.5">
+                          <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                          Adicionar conta
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="block">
+                  <div class="block-handle">
+                    <button class="size-5 rounded grid place-items-center text-mute hover:bg-zinc-800/60">
+                      <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                  </div>
+                  <div class="rounded-xl surface border border-soft overflow-hidden">
+                    <div class="px-5 py-3 border-b border-soft flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xl">📈</span>
+                        <h3 class="text-base font-semibold">Top categorias</h3>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <span class="text-[11px] mono px-2 py-0.5 rounded view-pill-active">barras</span>
+                        <span class="text-[11px] mono px-2 py-0.5 rounded text-mute">donut</span>
+                        <span class="text-[11px] mono px-2 py-0.5 rounded text-mute">tabela</span>
+                      </div>
+                    </div>
+                    <div class="px-5 py-4 space-y-2.5">
+                      <div>
+                        <div class="flex items-baseline justify-between mb-1">
+                          <span class="text-sm flex items-center gap-2"><span class="size-2 rounded-full bg-violet-400"></span>Restaurantes</span>
+                          <span class="text-sm tabnums">R$ 820</span>
+                        </div>
+                        <div class="h-1.5 rounded-full overflow-hidden" style="background: oklch(0.255 0.008 280);">
+                          <div class="h-full rounded-full" style="width:100%; background: oklch(0.78 0.16 295);"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex items-baseline justify-between mb-1">
+                          <span class="text-sm flex items-center gap-2"><span class="size-2 rounded-full bg-amber-400"></span>Combustível</span>
+                          <span class="text-sm tabnums">R$ 480</span>
+                        </div>
+                        <div class="h-1.5 rounded-full overflow-hidden" style="background: oklch(0.255 0.008 280);">
+                          <div class="h-full rounded-full" style="width:59%; background: oklch(0.78 0.14 80);"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex items-baseline justify-between mb-1">
+                          <span class="text-sm flex items-center gap-2"><span class="size-2 rounded-full bg-red-400"></span>Mercado</span>
+                          <span class="text-sm tabnums">R$ 410</span>
+                        </div>
+                        <div class="h-1.5 rounded-full overflow-hidden" style="background: oklch(0.255 0.008 280);">
+                          <div class="h-full rounded-full" style="width:50%; background: oklch(0.74 0.16 25);"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="flex items-baseline justify-between mb-1">
+                          <span class="text-sm flex items-center gap-2"><span class="size-2 rounded-full bg-emerald-400"></span>Saúde <span class="text-[9px] mono px-1 rounded border border-amber-400/30 text-amber-300">CL</span></span>
+                          <span class="text-sm tabnums">R$ 220</span>
+                        </div>
+                        <div class="h-1.5 rounded-full overflow-hidden" style="background: oklch(0.255 0.008 280);">
+                          <div class="h-full rounded-full" style="width:27%; background: oklch(0.78 0.16 155);"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Today / Tasks block (kanban view) -->
+              <div class="block">
+                <div class="block-handle">
+                  <button class="size-5 rounded grid place-items-center text-mute hover:bg-zinc-800/60">
+                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                  </button>
+                </div>
+                <div class="rounded-xl surface border border-soft overflow-hidden">
+                  <div class="px-5 py-3 border-b border-soft flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xl">✓</span>
+                      <h3 class="text-base font-semibold">Tasks</h3>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span class="text-[11px] mono px-2 py-0.5 rounded text-mute">today</span>
+                      <span class="text-[11px] mono px-2 py-0.5 rounded view-pill-active">kanban</span>
+                      <span class="text-[11px] mono px-2 py-0.5 rounded text-mute">cal</span>
+                    </div>
+                  </div>
+                  <div class="p-5 grid grid-cols-3 gap-3">
+                    <!-- Column: Today -->
+                    <div>
+                      <div class="flex items-center justify-between mb-2 px-1">
+                        <div class="text-xs font-medium uppercase tracking-wider text-soft">Today</div>
+                        <span class="text-[10px] mono text-faint">2</span>
+                      </div>
+                      <div class="space-y-1.5">
+                        <div class="rounded-lg surface-2 border border-soft p-2.5">
+                          <div class="text-[13px]">Pagar fatura Nubank</div>
+                          <div class="mono text-[10px] text-amber-300 mt-1">📎 R$ 2.340 · vence 3d</div>
+                        </div>
+                        <div class="rounded-lg surface-2 border border-soft p-2.5">
+                          <div class="text-[13px]">Lançar reembolso plano</div>
+                          <div class="mono text-[10px] text-mute mt-1">finanças · 30min</div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Column: Em progresso -->
+                    <div>
+                      <div class="flex items-center justify-between mb-2 px-1">
+                        <div class="text-xs font-medium uppercase tracking-wider text-soft">Em progresso</div>
+                        <span class="text-[10px] mono text-faint">1</span>
+                      </div>
+                      <div class="space-y-1.5">
+                        <div class="rounded-lg border-2 p-2.5" style="background: oklch(0.78 0.16 295 / 0.1); border-color: oklch(0.78 0.16 295 / 0.3);">
+                          <div class="text-[13px]">Estudar paper sepse</div>
+                          <div class="mono text-[10px] text-soft mt-1">médico · 30min</div>
+                          <div class="mt-1.5 h-1 rounded-full" style="background: oklch(0.32 0.012 280);">
+                            <div class="h-full rounded-full" style="width:60%; background: oklch(0.78 0.16 295);"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Column: Done -->
+                    <div>
+                      <div class="flex items-center justify-between mb-2 px-1">
+                        <div class="text-xs font-medium uppercase tracking-wider text-soft">Concluído hoje</div>
+                        <span class="text-[10px] mono text-faint">2</span>
+                      </div>
+                      <div class="space-y-1.5">
+                        <div class="rounded-lg surface-2 border border-soft p-2.5 opacity-60">
+                          <div class="text-[13px] line-through">Confirmar plantão fim de semana</div>
+                          <div class="mono text-[10px] text-mute mt-1">médico · 2 min</div>
+                        </div>
+                        <div class="rounded-lg surface-2 border border-soft p-2.5 opacity-60">
+                          <div class="text-[13px] line-through">Café com Daniel</div>
+                          <div class="mono text-[10px] text-mute mt-1">pessoal</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add block hint -->
+              <div class="text-center pt-2">
+                <button class="text-sm text-mute hover:text-zinc-100 inline-flex items-center gap-1.5 px-3 py-1.5 rounded hover:bg-zinc-800/50">
+                  <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                  <span class="casual">adicionar bloco</span>
+                  <span class="mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-800/80 text-faint">/</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Command Palette (overlay) -->
+          <div class="absolute inset-0 z-30 grid place-items-start pt-24" style="background: oklch(0.1 0.005 280 / 0.55); backdrop-filter: blur(2px);">
+            <div class="w-[560px] mx-auto rounded-2xl border border-strong shadow-2xl overflow-hidden" style="background: oklch(0.21 0.006 280);">
+              <div class="px-4 py-3 border-b border-soft flex items-center gap-3">
+                <svg class="size-4 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <input class="flex-1 bg-transparent outline-none text-base placeholder:text-faint" placeholder="o que você quer fazer?" value="ges" />
+                <span class="mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-mute">esc</span>
+              </div>
+              <div class="py-2 max-h-[360px] overflow-y-auto">
+                <div class="px-3 py-1 mono text-[10px] uppercase tracking-wider text-faint">Ações</div>
+                <div class="px-3 py-2 mx-2 rounded-md flex items-center gap-3" style="background: oklch(0.78 0.16 295 / 0.15);">
+                  <span class="text-base">⛽</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm">Capturar despesa</div>
+                    <div class="text-[11px] text-mute">crie nova transação tipo expense</div>
+                  </div>
+                  <span class="mono text-[10px] px-1.5 py-0.5 rounded text-soft" style="background: oklch(0.78 0.16 295 / 0.2);">↩</span>
+                </div>
+                <div class="px-3 py-2 mx-2 rounded-md flex items-center gap-3 hover:bg-zinc-800/40">
+                  <span class="text-base">🩺</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm">Adicionar plantão</div>
+                    <div class="text-[11px] text-mute">novo shift vinculado a hospital</div>
+                  </div>
+                </div>
+                <div class="px-3 py-2 mx-2 rounded-md flex items-center gap-3 hover:bg-zinc-800/40">
+                  <span class="text-base">✓</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm">Nova task</div>
+                    <div class="text-[11px] text-mute">today por padrão</div>
+                  </div>
+                </div>
+
+                <div class="px-3 py-1 mt-2 mono text-[10px] uppercase tracking-wider text-faint">Páginas</div>
+                <div class="px-3 py-2 mx-2 rounded-md flex items-center gap-3 hover:bg-zinc-800/40">
+                  <span class="text-base">💰</span>
+                  <div class="flex-1 text-sm">Finanças</div>
+                  <span class="mono text-[10px] text-faint">G F</span>
+                </div>
+                <div class="px-3 py-2 mx-2 rounded-md flex items-center gap-3 hover:bg-zinc-800/40">
+                  <span class="text-base">🩺</span>
+                  <div class="flex-1 text-sm">Plantões</div>
+                  <span class="mono text-[10px] text-faint">G A</span>
+                </div>
+
+                <div class="px-3 py-1 mt-2 mono text-[10px] uppercase tracking-wider text-faint">Sugestão IA</div>
+                <div class="px-3 py-2 mx-2 rounded-md flex items-center gap-3 hover:bg-zinc-800/40">
+                  <span class="size-7 rounded grid place-items-center" style="background: oklch(0.5 0.18 295 / 0.2); color: oklch(0.85 0.14 295);">
+                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v2M12 20v2M5 5l1.5 1.5M17.5 17.5 19 19M2 12h2M20 12h2"/><circle cx="12" cy="12" r="4"/></svg>
+                  </span>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm casual">"mostre meus gastos com restaurante este mês"</div>
+                    <div class="text-[11px] text-mute">pergunta natural ao Agendario</div>
+                  </div>
+                </div>
+              </div>
+              <div class="px-4 py-2 border-t border-soft flex items-center justify-between mono text-[10px] text-faint">
+                <div class="flex items-center gap-3">
+                  <span><span class="px-1.5 py-0.5 rounded bg-zinc-800">↑↓</span> navegar</span>
+                  <span><span class="px-1.5 py-0.5 rounded bg-zinc-800">↩</span> selecionar</span>
+                </div>
+                <span>4 resultados</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOBILE MOCK -->
+  <section>
+    <div class="flex items-center justify-between mb-3">
+      <div class="mono text-xs text-faint tracking-wider uppercase">mobile · 375×</div>
+      <div class="mono text-xs text-faint">drawer pages · view pills · ⌘K-style sheet</div>
+    </div>
+
+    <div class="flex flex-wrap gap-6">
+
+      <!-- Phone 1: Home (blocks) -->
+      <div class="device-mobile">
+        <div class="rounded-[2.4rem] border border-soft p-2.5" style="background: oklch(0.165 0.005 280); box-shadow: 0 30px 60px -30px rgba(0,0,0,0.8);">
+          <div class="rounded-[1.95rem] overflow-hidden relative" style="height:760px; background: oklch(0.165 0.005 280);">
+            <div class="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-6 rounded-2xl z-30" style="background: oklch(0.165 0.005 280);"></div>
+            <div class="px-7 pt-3 pb-1 flex items-center justify-between text-[10px] mono text-zinc-300 relative z-20">
+              <span>9:41</span>
+              <span class="flex items-center gap-1.5">
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-500"></span>
+              </span>
+            </div>
+
+            <!-- Page topbar -->
+            <div class="px-4 pt-3 pb-2 flex items-center justify-between">
+              <button class="size-8 rounded-full surface grid place-items-center">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+              </button>
+              <div class="text-xs text-soft mono">📊 / Início</div>
+              <button class="size-8 rounded-full surface grid place-items-center">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              </button>
+            </div>
+
+            <div class="overflow-y-auto scrollbar-thin h-[640px] px-4 pb-24">
+
+              <!-- Hero -->
+              <div class="pt-2 pb-4">
+                <div class="text-4xl mb-2">📊</div>
+                <h1 class="text-2xl font-bold tracking-tight">Início</h1>
+                <p class="text-xs text-soft casual mt-1">Tudo de relance, do jeito que <span class="slant">você</span> organizou.</p>
+              </div>
+
+              <!-- KPI block -->
+              <div class="rounded-xl surface border border-soft p-3 mb-3">
+                <div class="text-[10px] mono text-faint uppercase tracking-wider mb-2">resumo · maio</div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <div class="text-xs text-mute">Saldo</div>
+                    <div class="text-base font-semibold tabnums mt-0.5">R$ 47.230</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-mute">Líquido</div>
+                    <div class="text-base font-semibold tabnums text-emerald-400 mt-0.5">+ 10.050</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-mute">A receber</div>
+                    <div class="text-base font-semibold tabnums mt-0.5">R$ 3.400</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-mute">A pagar (3d)</div>
+                    <div class="text-base font-semibold tabnums text-amber-300 mt-0.5">R$ 2.340</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Plantões block -->
+              <div class="rounded-xl surface border border-soft mb-3 overflow-hidden">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-soft">
+                  <div class="flex items-center gap-1.5">
+                    <span>🩺</span>
+                    <span class="text-sm font-medium">Plantões</span>
+                  </div>
+                  <div class="flex items-center gap-0.5">
+                    <span class="text-[10px] mono px-1.5 py-0.5 rounded view-pill-active">cal</span>
+                    <span class="text-[10px] mono px-1.5 py-0.5 rounded text-mute">lista</span>
+                    <span class="text-[10px] mono px-1.5 py-0.5 rounded text-mute">kb</span>
+                  </div>
+                </div>
+                <div class="p-3">
+                  <div class="grid grid-cols-7 gap-1">
+                    <div class="rounded text-center py-1.5 surface-2 border border-soft">
+                      <div class="text-[8px] mono text-faint">s</div>
+                      <div class="text-xs tabnums">04</div>
+                    </div>
+                    <div class="rounded text-center py-1.5 border-2" style="background: oklch(0.78 0.16 295 / 0.15); border-color: oklch(0.78 0.16 295 / 0.4);">
+                      <div class="text-[8px] mono accent">hoje</div>
+                      <div class="text-xs tabnums font-semibold">05</div>
+                    </div>
+                    <div class="rounded text-center py-1.5 surface-2 border border-soft relative">
+                      <div class="text-[8px] mono text-faint">q</div>
+                      <div class="text-xs tabnums">06</div>
+                      <span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 size-1 rounded-full bg-emerald-400"></span>
+                    </div>
+                    <div class="rounded text-center py-1.5 surface-2 border border-soft">
+                      <div class="text-[8px] mono text-faint">s</div>
+                      <div class="text-xs tabnums">07</div>
+                    </div>
+                    <div class="rounded text-center py-1.5 surface-2 border border-soft relative">
+                      <div class="text-[8px] mono text-faint">s</div>
+                      <div class="text-xs tabnums">08</div>
+                      <span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 size-1 rounded-full" style="background: oklch(0.78 0.16 295);"></span>
+                    </div>
+                    <div class="rounded text-center py-1.5 surface-2 border border-soft relative">
+                      <div class="text-[8px] mono text-faint">d</div>
+                      <div class="text-xs tabnums">09</div>
+                      <span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 size-1 rounded-full bg-emerald-400"></span>
+                    </div>
+                    <div class="rounded text-center py-1.5 surface-2 border border-soft">
+                      <div class="text-[8px] mono text-faint">s</div>
+                      <div class="text-xs tabnums">10</div>
+                    </div>
+                  </div>
+                  <div class="mt-3 rounded-lg p-2.5 border" style="background: oklch(0.78 0.16 295 / 0.1); border-color: oklch(0.78 0.16 295 / 0.3);">
+                    <div class="text-[10px] mono accent uppercase">hoje · 19h</div>
+                    <div class="text-sm font-medium mt-0.5">Real Português · 12h</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bills block -->
+              <div class="rounded-xl surface border border-soft mb-3 overflow-hidden">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-soft">
+                  <div class="flex items-center gap-1.5">
+                    <span>💸</span>
+                    <span class="text-sm font-medium">A pagar</span>
+                  </div>
+                  <span class="text-[10px] mono text-mute">3 itens</span>
+                </div>
+                <div class="divide-y divide-zinc-800/60 text-sm">
+                  <div class="px-3 py-2 flex items-center justify-between">
+                    <div class="min-w-0">
+                      <div class="text-[13px]">Fatura Nubank</div>
+                      <div class="mono text-[10px] text-amber-300">3d · 08 mai</div>
+                    </div>
+                    <div class="tabnums text-[13px]">2.340</div>
+                  </div>
+                  <div class="px-3 py-2 flex items-center justify-between">
+                    <div class="min-w-0">
+                      <div class="text-[13px]">Plano Hapvida</div>
+                      <div class="mono text-[10px] text-mute">5d · 10 mai</div>
+                    </div>
+                    <div class="tabnums text-[13px]">780</div>
+                  </div>
+                  <div class="px-3 py-2 flex items-center justify-between">
+                    <div class="min-w-0">
+                      <div class="text-[13px]">Spotify Family</div>
+                      <div class="mono text-[10px] text-mute">8d · 13 mai</div>
+                    </div>
+                    <div class="tabnums text-[13px]">35</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tasks kanban (compact) -->
+              <div class="rounded-xl surface border border-soft mb-3 overflow-hidden">
+                <div class="px-3 py-2 flex items-center justify-between border-b border-soft">
+                  <div class="flex items-center gap-1.5">
+                    <span>✓</span>
+                    <span class="text-sm font-medium">Today</span>
+                  </div>
+                  <div class="flex items-center gap-0.5">
+                    <span class="text-[10px] mono px-1.5 py-0.5 rounded view-pill-active">lista</span>
+                    <span class="text-[10px] mono px-1.5 py-0.5 rounded text-mute">cal</span>
+                  </div>
+                </div>
+                <div class="p-3 space-y-1.5">
+                  <div class="flex items-center gap-2 rounded-md py-1.5 px-2 hover:bg-zinc-800/40">
+                    <span class="size-3.5 rounded border border-soft"></span>
+                    <span class="text-[13px] flex-1">Pagar fatura Nubank</span>
+                    <span class="mono text-[10px] text-amber-300">3d</span>
+                  </div>
+                  <div class="flex items-center gap-2 rounded-md py-1.5 px-2 hover:bg-zinc-800/40">
+                    <span class="size-3.5 rounded border-2" style="border-color: oklch(0.78 0.16 295);"></span>
+                    <span class="text-[13px] flex-1">Estudar paper sepse</span>
+                    <span class="mono text-[10px] text-mute">30min</span>
+                  </div>
+                  <div class="flex items-center gap-2 rounded-md py-1.5 px-2 opacity-50">
+                    <span class="size-3.5 rounded grid place-items-center" style="background: oklch(0.78 0.16 295);">
+                      <svg class="size-2.5" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+                    </span>
+                    <span class="text-[13px] line-through flex-1">Confirmar plantão fim de semana</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Bottom bar — minimal Notion style -->
+            <div class="absolute bottom-0 left-0 right-0 z-20 border-t border-soft" style="background: oklch(0.165 0.005 280 / 0.92); backdrop-filter: blur(20px);">
+              <div class="grid grid-cols-3 px-2 pt-2 pb-6">
+                <button class="flex items-center justify-center gap-1.5 text-xs text-zinc-100">
+                  <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                  <span>Páginas</span>
+                </button>
+                <button class="flex items-center justify-center text-xs">
+                  <span class="size-11 rounded-full grid place-items-center" style="background: oklch(0.78 0.16 295);">
+                    <span class="mono text-base font-semibold text-zinc-100">⌘K</span>
+                  </span>
+                </button>
+                <button class="flex items-center justify-center gap-1.5 text-xs text-mute">
+                  <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 12h-6l-2 3h-4l-2-3H2"/></svg>
+                  <span>Inbox <span class="ml-1 text-[10px] px-1.5 rounded text-amber-300" style="background: oklch(0.5 0.18 80 / 0.2);">3</span></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 text-center mono text-[11px] text-faint">Início (blocks)</div>
+      </div>
+
+      <!-- Phone 2: ⌘K Command Palette mobile -->
+      <div class="device-mobile">
+        <div class="rounded-[2.4rem] border border-soft p-2.5" style="background: oklch(0.165 0.005 280);">
+          <div class="rounded-[1.95rem] overflow-hidden relative" style="height:760px; background: oklch(0.165 0.005 280);">
+            <div class="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-6 rounded-2xl z-30" style="background: oklch(0.165 0.005 280);"></div>
+            <div class="px-7 pt-3 pb-1 flex items-center justify-between text-[10px] mono text-zinc-300 relative z-20">
+              <span>9:41</span>
+              <span class="flex items-center gap-1.5">
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-500"></span>
+              </span>
+            </div>
+
+            <div class="h-[680px] relative">
+              <!-- Faded background -->
+              <div class="absolute inset-0 opacity-25 pointer-events-none">
+                <div class="px-4 pt-4"><div class="size-10 rounded mb-2" style="background: oklch(0.205 0.006 280);"></div></div>
+                <div class="px-4 mb-3"><div class="h-6 w-32 rounded surface"></div></div>
+                <div class="mx-4 h-24 rounded-xl surface mb-3"></div>
+                <div class="mx-4 h-20 rounded-xl surface mb-3"></div>
+              </div>
+              <div class="absolute inset-0" style="background: oklch(0.1 0.005 280 / 0.5); backdrop-filter: blur(2px);"></div>
+
+              <!-- Bottom sheet ⌘K -->
+              <div class="absolute bottom-0 left-0 right-0 rounded-t-[1.75rem] border-t border-strong p-4 pb-7 z-10" style="background: oklch(0.21 0.006 280);">
+                <div class="mx-auto w-10 h-1 rounded-full mb-4" style="background: oklch(0.4 0.005 280);"></div>
+
+                <!-- Search input -->
+                <div class="rounded-xl border border-soft bg-zinc-900/60 px-3 py-3 flex items-center gap-2.5">
+                  <svg class="size-4 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <span class="flex-1 text-base">capt<span class="inline-block w-0.5 h-4 align-middle ml-0.5" style="background: oklch(0.78 0.16 295);"></span></span>
+                  <span class="size-7 rounded-full grid place-items-center" style="background: oklch(0.78 0.16 295);">
+                    <span class="mono text-[10px] text-zinc-100">⌘K</span>
+                  </span>
+                </div>
+
+                <!-- Results -->
+                <div class="mt-3 space-y-1">
+                  <div class="mono text-[10px] uppercase tracking-wider text-faint px-1 py-1">ações</div>
+                  <div class="rounded-xl px-3 py-3 flex items-center gap-3" style="background: oklch(0.78 0.16 295 / 0.15);">
+                    <span class="text-base">⛽</span>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm">Capturar despesa</div>
+                      <div class="text-[11px] text-mute">crie nova transação</div>
+                    </div>
+                    <span class="mono text-[10px] px-1.5 py-0.5 rounded text-soft" style="background: oklch(0.78 0.16 295 / 0.2);">↩</span>
+                  </div>
+                  <div class="rounded-xl px-3 py-3 flex items-center gap-3 surface-2 border border-soft">
+                    <span class="text-base">🩺</span>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm">Adicionar plantão</div>
+                      <div class="text-[11px] text-mute">novo shift</div>
+                    </div>
+                  </div>
+                  <div class="rounded-xl px-3 py-3 flex items-center gap-3 surface-2 border border-soft">
+                    <span class="text-base">✓</span>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm">Nova task today</div>
+                      <div class="text-[11px] text-mute">hoje por padrão</div>
+                    </div>
+                  </div>
+
+                  <div class="mono text-[10px] uppercase tracking-wider text-faint px-1 pt-3 pb-1">favoritos</div>
+                  <div class="flex flex-wrap gap-1.5 pb-2">
+                    <span class="text-[12px] px-2.5 py-1.5 rounded-full surface-2 border border-soft">⛽ Combustível R$ 300</span>
+                    <span class="text-[12px] px-2.5 py-1.5 rounded-full surface-2 border border-soft">🍽️ Almoço hospital</span>
+                    <span class="text-[12px] px-2.5 py-1.5 rounded-full surface-2 border border-soft">🏥 Plantão template</span>
+                  </div>
+
+                  <div class="mono text-[10px] uppercase tracking-wider text-faint px-1 pt-2 pb-1">pergunte</div>
+                  <div class="rounded-xl px-3 py-3 flex items-center gap-3 surface-2 border border-soft">
+                    <span class="size-7 rounded grid place-items-center" style="background: oklch(0.5 0.18 295 / 0.2); color: oklch(0.85 0.14 295);">
+                      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/></svg>
+                    </span>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm casual">"capturar restaurante 65"</div>
+                      <div class="text-[11px] text-mute">Agendario AI vai parsear</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 text-center mono text-[11px] text-faint">⌘K mobile sheet</div>
+      </div>
+
+      <!-- Phone 3: Pages drawer (Notion sidebar mobile) -->
+      <div class="device-mobile">
+        <div class="rounded-[2.4rem] border border-soft p-2.5" style="background: oklch(0.165 0.005 280);">
+          <div class="rounded-[1.95rem] overflow-hidden relative" style="height:760px; background: oklch(0.18 0.005 280);">
+            <div class="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-6 rounded-2xl z-30" style="background: oklch(0.18 0.005 280);"></div>
+            <div class="px-7 pt-3 pb-1 flex items-center justify-between text-[10px] mono text-zinc-300 relative z-20">
+              <span>9:41</span>
+              <span class="flex items-center gap-1.5">
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-300"></span>
+                <span class="size-1 rounded-full bg-zinc-500"></span>
+              </span>
+            </div>
+
+            <div class="h-[680px] flex flex-col px-4 pt-4 pb-6 overflow-y-auto">
+              <!-- Workspace -->
+              <div class="flex items-center gap-2 px-2 py-2 rounded-md mb-3">
+                <div class="size-8 rounded grid place-items-center font-semibold text-sm" style="background: oklch(0.78 0.16 295 / 0.2); color: oklch(0.85 0.14 295);">L</div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium truncate">Agendario · Luiz</div>
+                  <div class="text-[10px] mono text-mute">contato@luizprazeres.com.br</div>
+                </div>
+              </div>
+
+              <!-- Search -->
+              <div class="rounded-lg surface border border-soft px-3 py-2 mb-4 flex items-center gap-2">
+                <svg class="size-4 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <span class="flex-1 text-sm text-mute mono">Busca rápida</span>
+                <span class="mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-soft">⌘K</span>
+              </div>
+
+              <!-- Quick links -->
+              <a class="flex items-center gap-2.5 px-2.5 py-2 rounded-md mb-1 hover:bg-zinc-800/40">
+                <span>📥</span>
+                <span class="text-sm flex-1">Inbox</span>
+                <span class="mono text-[10px] px-1.5 py-0.5 rounded text-amber-300" style="background: oklch(0.5 0.18 80 / 0.18);">3</span>
+              </a>
+              <a class="flex items-center gap-2.5 px-2.5 py-2 rounded-md mb-3 hover:bg-zinc-800/40">
+                <span>✓</span>
+                <span class="text-sm flex-1">Today</span>
+                <span class="mono text-[10px] text-mute">4</span>
+              </a>
+
+              <!-- Pages -->
+              <div class="mono text-[10px] uppercase tracking-wider text-faint px-2.5 mb-1.5">workspace</div>
+              <a class="flex items-center gap-2.5 px-2.5 py-2 rounded-md" style="background: oklch(0.78 0.16 295 / 0.1);">
+                <span>📊</span>
+                <span class="text-sm flex-1">Dashboard</span>
+              </a>
+              <div class="ml-3 pl-2 border-l border-soft space-y-0.5 mt-1">
+                <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-soft hover:bg-zinc-800/40">
+                  <span>💰</span><span class="text-[13px]">Finanças</span>
+                </a>
+                <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-soft hover:bg-zinc-800/40">
+                  <span>🩺</span><span class="text-[13px]">Plantões</span>
+                </a>
+                <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-soft hover:bg-zinc-800/40">
+                  <span>✓</span><span class="text-[13px]">Tasks</span>
+                </a>
+                <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-soft hover:bg-zinc-800/40">
+                  <span>💡</span><span class="text-[13px]">Insights</span>
+                </a>
+              </div>
+
+              <div class="mono text-[10px] uppercase tracking-wider text-faint px-2.5 mt-5 mb-1.5">favoritos</div>
+              <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-soft hover:bg-zinc-800/40">
+                <span>⛽</span><span class="text-[13px] flex-1">Combustível R$ 300</span>
+              </a>
+              <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-soft hover:bg-zinc-800/40">
+                <span>🍽️</span><span class="text-[13px] flex-1">Almoço hospital</span>
+              </a>
+              <a class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-soft hover:bg-zinc-800/40">
+                <span>🏥</span><span class="text-[13px] flex-1">Plantão noturno</span>
+              </a>
+
+              <div class="mono text-[10px] uppercase tracking-wider text-faint px-2.5 mt-5 mb-1.5">conexões</div>
+              <div class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-soft">
+                <span class="size-1.5 rounded-full bg-emerald-400"></span>
+                <span class="text-[13px] flex-1">Telegram bot</span>
+                <span class="text-[10px] mono text-mute">conectado</span>
+              </div>
+              <div class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-soft">
+                <span class="size-1.5 rounded-full" style="background: oklch(0.4 0.005 280);"></span>
+                <span class="text-[13px] flex-1">Google Calendar</span>
+                <span class="text-[10px] mono text-mute">conectar</span>
+              </div>
+
+              <div class="mt-auto pt-5 px-2.5">
+                <button class="w-full flex items-center gap-2 text-sm text-mute hover:text-soft py-2">
+                  <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                  Nova página
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 text-center mono text-[11px] text-faint">Páginas (drawer)</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Notes -->
+  <section class="border-t border-soft pt-10 max-w-3xl">
+    <div class="mono text-[10px] uppercase tracking-wider text-mute mb-3">notas de design</div>
+    <ul class="space-y-2 text-sm text-soft">
+      <li class="flex gap-3"><span class="accent">·</span> Recursive variable: <span class="casual">casual</span> em parágrafos, <span class="slant">slant</span> em ênfase, mono em códigos — uma família, várias vozes</li>
+      <li class="flex gap-3"><span class="accent">·</span> Cada bloco tem view switcher próprio (calendar/lista/kanban/tabela/donut) — mesma data, formas diferentes</li>
+      <li class="flex gap-3"><span class="accent">·</span> Drag handles aparecem no hover (esquerda do bloco) — rearranjável sem fricção</li>
+      <li class="flex gap-3"><span class="accent">·</span> ⌘K é o coração: ações, navegação, perguntas naturais à IA, favoritos · keyboard-first mas com sheet mobile equivalente</li>
+      <li class="flex gap-3"><span class="accent">·</span> Sidebar tipo Notion: workspace · pages tree · favoritos · conexões — pages são editáveis, não hard-coded</li>
+      <li class="flex gap-3"><span class="accent">·</span> Mobile: bottom nav 3-itens (páginas · ⌘K central destacado · inbox) — menos é mais</li>
+    </ul>
+  </section>
+
+  <footer class="pt-8 pb-12 mono text-[10px] text-faint">
+    03 — modular · <a href="index.html" class="text-zinc-300 hover:text-zinc-100">voltar ao hub →</a>
+  </footer>
+
+</main>
+</body>
+</html>
