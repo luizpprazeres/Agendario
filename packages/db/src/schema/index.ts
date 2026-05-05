@@ -11,3 +11,4 @@ export * from "./receipts";
 export * from "./inbox";
 export * from "./integrations";
 export * from "./insights";
+export * from "./expense-templates";

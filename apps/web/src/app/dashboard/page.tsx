@@ -1,8 +1,10 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   categories,
+  expenseTemplates,
   financialAccounts,
   shifts,
   subscriptions,
@@ -10,6 +12,7 @@ import {
   workplaces,
 } from "@agendario/db";
 import { getDb } from "@/lib/db";
+import { inngest } from "@/lib/inngest/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -88,6 +91,104 @@ async function signOut() {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+async function applyTemplate(formData: FormData) {
+  "use server";
+
+  const templateId = String(formData.get("template_id") ?? "");
+  if (!templateId) return;
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const db = getDb();
+
+  const [tpl] = await db
+    .select()
+    .from(expenseTemplates)
+    .where(
+      and(
+        eq(expenseTemplates.id, templateId),
+        eq(expenseTemplates.user_id, user.id),
+        eq(expenseTemplates.is_archived, false)
+      )
+    )
+    .limit(1);
+
+  if (!tpl) return;
+
+  // Resolve account: usa default_account_id, senão primeira conta non-credit ativa.
+  let accountId = tpl.default_account_id;
+  if (!accountId) {
+    const [acc] = await db
+      .select({ id: financialAccounts.id })
+      .from(financialAccounts)
+      .where(
+        and(
+          eq(financialAccounts.user_id, user.id),
+          eq(financialAccounts.is_archived, false)
+        )
+      )
+      .orderBy(asc(financialAccounts.created_at))
+      .limit(1);
+    accountId = acc?.id ?? null;
+  }
+  if (!accountId) return;
+
+  // Aplica sinal conforme type. amount_cents é STRING decimal.
+  const baseAmount = Number(tpl.default_amount_cents);
+  const signedAmount =
+    tpl.type === "expense" ? -Math.abs(baseAmount) : Math.abs(baseAmount);
+
+  // Hoje em America/Recife (YYYY-MM-DD).
+  const occurredOn = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Recife",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const [created] = await db
+    .insert(transactions)
+    .values({
+      user_id: user.id,
+      account_id: accountId,
+      category_id: tpl.default_category_id,
+      workplace_id: tpl.default_workplace_id,
+      type: tpl.type,
+      amount_cents: signedAmount.toString(),
+      description: tpl.description_template,
+      occurred_on: occurredOn,
+      source: "template",
+      external_id: `tpl:${tpl.id}:${Date.now()}`,
+      notes: tpl.notes,
+    })
+    .returning({ id: transactions.id });
+
+  if (!created) return;
+
+  // Bump usage stats.
+  await db
+    .update(expenseTemplates)
+    .set({
+      usage_count: sql`${expenseTemplates.usage_count} + 1`,
+      last_used_at: new Date(),
+    })
+    .where(eq(expenseTemplates.id, tpl.id));
+
+  // Categorize via LLM se template não tinha categoria pré-definida.
+  if (!tpl.default_category_id) {
+    await inngest.send({
+      name: "transactions/categorize-requested",
+      data: { transaction_id: created.id },
+    });
+  }
+
+  revalidatePath("/dashboard");
 }
 
 // TODO: queries usam Drizzle direct (postgres role) — bypassa RLS.
@@ -204,6 +305,29 @@ async function loadDashboard(userId: string) {
     )
     .orderBy(asc(subscriptions.next_charge_on));
 
+  const favoriteTemplates = await db
+    .select({
+      id: expenseTemplates.id,
+      name: expenseTemplates.name,
+      icon: expenseTemplates.icon,
+      color: expenseTemplates.color,
+      type: expenseTemplates.type,
+      default_amount_cents: expenseTemplates.default_amount_cents,
+    })
+    .from(expenseTemplates)
+    .where(
+      and(
+        eq(expenseTemplates.user_id, userId),
+        eq(expenseTemplates.is_archived, false)
+      )
+    )
+    .orderBy(
+      desc(expenseTemplates.usage_count),
+      asc(expenseTemplates.sort_order),
+      asc(expenseTemplates.name)
+    )
+    .limit(6);
+
   const totalCents = Number(totalRow[0]?.total ?? 0);
 
   return {
@@ -211,6 +335,7 @@ async function loadDashboard(userId: string) {
     recentTx,
     upcoming,
     activeSubscriptions,
+    favoriteTemplates,
     monthSummary: {
       label: monthLabel(year, month),
       totals: monthTotals,
@@ -253,6 +378,7 @@ export default async function DashboardPage() {
     recentTx,
     upcoming,
     activeSubscriptions,
+    favoriteTemplates,
     monthSummary,
   } = await loadDashboard(user.id);
 
@@ -490,6 +616,59 @@ export default async function DashboardPage() {
             </div>
           </div>
         </section>
+
+        {/* Favoritos — chips de templates 1-clique */}
+        {favoriteTemplates.length > 0 ? (
+          <section>
+            <p
+              className="font-mono text-[10px] uppercase tracking-wider mb-2 px-1"
+              style={{ color: "oklch(0.55 0.006 30)" }}
+            >
+              Favoritos
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 sm:flex-wrap sm:overflow-visible sm:mx-0 sm:px-0">
+              {favoriteTemplates.map((tpl) => {
+                const cents = Number(tpl.default_amount_cents);
+                const isExpense = tpl.type === "expense";
+                const swatch = tpl.color ?? "oklch(0.5 0.05 250)";
+                return (
+                  <form
+                    key={tpl.id}
+                    action={applyTemplate}
+                    className="shrink-0"
+                  >
+                    <input type="hidden" name="template_id" value={tpl.id} />
+                    <button
+                      type="submit"
+                      className="flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm transition active:scale-[0.97] hover:border-zinc-700"
+                      style={{
+                        background: `color-mix(in oklch, ${swatch} 12%, oklch(0.21 0.007 30))`,
+                        borderColor: "oklch(0.28 0.008 30)",
+                      }}
+                    >
+                      {tpl.icon ? (
+                        <span className="text-base leading-none">
+                          {tpl.icon}
+                        </span>
+                      ) : null}
+                      <span className="text-zinc-100 whitespace-nowrap">
+                        {tpl.name}
+                      </span>
+                      <span
+                        className={`tabular-nums font-medium ${
+                          isExpense ? "text-red-400" : "text-emerald-400"
+                        }`}
+                      >
+                        {isExpense ? "− " : "+ "}
+                        {BRL.format(cents / 100)}
+                      </span>
+                    </button>
+                  </form>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
         {/* Próximo plantão (highlight) */}
         {next ? (
