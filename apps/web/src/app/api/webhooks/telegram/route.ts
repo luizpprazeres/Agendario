@@ -87,11 +87,13 @@ async function resolveUser(telegramChatId: string): Promise<string | null> {
 // ---------- POST ----------
 
 export async function POST(req: NextRequest) {
+  // Auth: aceita 2 headers
+  //   - `x-internal-secret`: usado em dev pelo bot polling (apps/bot)
+  //   - `x-telegram-bot-api-secret-token`: enviado pelo Telegram em prod via setWebhook
   const internalSecret = req.headers.get("x-internal-secret");
-  if (
-    serverEnv.TELEGRAM_WEBHOOK_SECRET &&
-    internalSecret !== serverEnv.TELEGRAM_WEBHOOK_SECRET
-  ) {
+  const telegramSecret = req.headers.get("x-telegram-bot-api-secret-token");
+  const expected = serverEnv.TELEGRAM_WEBHOOK_SECRET;
+  if (expected && internalSecret !== expected && telegramSecret !== expected) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

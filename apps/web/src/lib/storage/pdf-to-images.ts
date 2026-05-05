@@ -8,7 +8,6 @@
  * baixa fontes e usa workers. Se falhar em prod, plano B é skipar PDF
  * (só image/* no upload).
  */
-import { pdf } from "pdf-to-img";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const MAX_PAGES = 5;
@@ -35,6 +34,9 @@ export async function pdfBufferToImages(args: {
 }): Promise<PdfToImagesResult> {
   const { supabase, userId, batchId, pdfBuffer } = args;
 
+  // Lazy import: pdf-to-img depende de DOMMatrix (PDF.js) que quebra
+  // o module-load em runtime serverless. Carrega só quando precisa processar PDF.
+  const { pdf } = await import("pdf-to-img");
   const document = await pdf(pdfBuffer, { scale: 2 });
   const pagesTotal = document.length;
   const pagesProcessed = Math.min(pagesTotal, MAX_PAGES);
