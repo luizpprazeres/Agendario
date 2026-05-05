@@ -186,6 +186,12 @@ export const confirmInboxItem = inngest.createFunction(
           resolvedTable = "shifts";
           resolvedId = inserted.id;
           successMsg = `✅ Plantão agendado em *${sh.workplace_hint}*.`;
+
+          // Dispara sync com Google Calendar (skip silencioso se não conectado)
+          await inngest.send({
+            name: "gcal/sync-push",
+            data: { entity_table: "shifts", entity_id: inserted.id },
+          });
           break;
         }
 
