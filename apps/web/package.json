@@ -18,7 +18,7 @@
     "googleapis": "^171.4.0",
     "grammy": "^1.32.0",
     "inngest": "^3.27.5",
-    "next": "15.0.3",
+    "next": "15.5.15",
     "openai": "^4.73.1",
     "pdf-to-img": "^6.0.0",
     "postgres": "^3.4.5",
@@ -32,7 +32,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.16.0",
-    "eslint-config-next": "15.0.3",
+    "eslint-config-next": "15.5.15",
     "tailwindcss": "^4.0.0-beta.4",
     "typescript": "^5.6.3"
   }
