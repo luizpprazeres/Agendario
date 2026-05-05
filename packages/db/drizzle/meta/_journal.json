@@ -15,6 +15,13 @@
       "when": 1777996275464,
       "tag": "0001_shallow_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778002382920,
+      "tag": "0002_noisy_timeslip",
+      "breakpoints": true
     }
   ]
 }
