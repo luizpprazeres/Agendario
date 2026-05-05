@@ -6,6 +6,7 @@ import {
   index,
   jsonb,
   pgTable,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -44,6 +45,10 @@ export const financialAccounts = pgTable(
       .default("0"),
     color: text("color"),
     is_archived: boolean("is_archived").notNull().default(false),
+    // Credit card específicos — nullable, só preenchidos quando type='credit_card'
+    cc_closing_day: smallint("cc_closing_day"),
+    cc_due_day: smallint("cc_due_day"),
+    cc_limit_cents: decimal("cc_limit_cents", { precision: 14, scale: 0 }),
     metadata: jsonb("metadata").notNull().default(sql`'{}'::jsonb`),
     ...timestampsColumns(),
   },

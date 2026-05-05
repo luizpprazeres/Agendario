@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import {
   categories,
+  creditCardInstallments,
   financialAccounts,
   shifts,
   subscriptions,
@@ -53,6 +54,74 @@ function monthRange(tz = "America/Recife") {
   const nextMonth = month === 12 ? 1 : month + 1;
   const endStr = `${nextYear}-${pad(nextMonth)}-01`;
   return { startStr, endStr, year, month };
+}
+
+// Janela do ciclo atual de fatura, baseada em closing_day.
+// Retorna [start, end) — start exclusivo do dia anterior, end exclusivo do close+1.
+function currentCycle(closingDay: number, tz = "America/Recife") {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const y = Number(parts.find((p) => p.type === "year")!.value);
+  const m = Number(parts.find((p) => p.type === "month")!.value); // 1..12
+  const d = Number(parts.find((p) => p.type === "day")!.value);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  // Se hoje > closingDay → ciclo: [this_month closingDay+1, next_month closingDay+1)
+  // Se hoje <= closingDay → ciclo: [last_month closingDay+1, this_month closingDay+1)
+  const startY = d > closingDay ? y : m === 1 ? y - 1 : y;
+  const startM = d > closingDay ? m : m === 1 ? 12 : m - 1;
+  const endY = d > closingDay ? (m === 12 ? y + 1 : y) : y;
+  const endM = d > closingDay ? (m === 12 ? 1 : m + 1) : m;
+  const startStr = `${startY}-${pad(startM)}-${pad(closingDay + 1)}`;
+  const endStr = `${endY}-${pad(endM)}-${pad(closingDay + 1)}`;
+  return { startStr, endStr };
+}
+
+// Próxima data de vencimento, formatada "08 jun".
+function dueLabel(dueDay: number, tz = "America/Recife") {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const y = Number(parts.find((p) => p.type === "year")!.value);
+  const m = Number(parts.find((p) => p.type === "month")!.value);
+  const d = Number(parts.find((p) => p.type === "day")!.value);
+  const dueY = d > dueDay ? (m === 12 ? y + 1 : y) : y;
+  const dueM = d > dueDay ? (m === 12 ? 1 : m + 1) : m;
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "UTC",
+  })
+    .format(new Date(Date.UTC(dueY, dueM - 1, dueDay)))
+    .replace(".", "");
+}
+
+// Mesma fórmula pra fechamento (próximo close), exibido como "28 mai".
+function closeLabel(closingDay: number, tz = "America/Recife") {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const y = Number(parts.find((p) => p.type === "year")!.value);
+  const m = Number(parts.find((p) => p.type === "month")!.value);
+  const d = Number(parts.find((p) => p.type === "day")!.value);
+  const closeY = d > closingDay ? (m === 12 ? y + 1 : y) : y;
+  const closeM = d > closingDay ? (m === 12 ? 1 : m + 1) : m;
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "UTC",
+  })
+    .format(new Date(Date.UTC(closeY, closeM - 1, closingDay)))
+    .replace(".", "");
 }
 
 function monthLabel(year: number, month: number) {
@@ -203,6 +272,75 @@ async function loadDashboard(userId: string) {
     )
     .orderBy(asc(subscriptions.next_charge_on));
 
+  const cardsRaw = await db
+    .select({
+      id: financialAccounts.id,
+      name: financialAccounts.name,
+      institution: financialAccounts.institution,
+      color: financialAccounts.color,
+      cc_closing_day: financialAccounts.cc_closing_day,
+      cc_due_day: financialAccounts.cc_due_day,
+      cc_limit_cents: financialAccounts.cc_limit_cents,
+    })
+    .from(financialAccounts)
+    .where(
+      and(
+        eq(financialAccounts.user_id, userId),
+        eq(financialAccounts.type, "credit_card"),
+        eq(financialAccounts.is_archived, false)
+      )
+    )
+    .orderBy(asc(financialAccounts.name));
+
+  // Pra cada cartão, SUM das transactions do ciclo atual.
+  // 1 query/cartão pra simplicidade — otimizar agregado se virar gargalo.
+  const cards = await Promise.all(
+    cardsRaw.map(async (c) => {
+      let openInvoiceCents = 0;
+      if (c.cc_closing_day) {
+        const { startStr, endStr } = currentCycle(c.cc_closing_day);
+        const result = await db
+          .select({
+            total: sql<string>`COALESCE(SUM(ABS(${transactions.amount_cents})), 0)`,
+          })
+          .from(transactions)
+          .where(
+            and(
+              eq(transactions.user_id, userId),
+              eq(transactions.account_id, c.id),
+              eq(transactions.type, "expense"),
+              gte(transactions.occurred_on, startStr),
+              lt(transactions.occurred_on, endStr)
+            )
+          );
+        openInvoiceCents = Number(result[0]?.total ?? 0);
+      }
+      return { ...c, openInvoiceCents };
+    })
+  );
+
+  const activeInstallments = await db
+    .select({
+      id: creditCardInstallments.id,
+      description: creditCardInstallments.description,
+      installment_count: creditCardInstallments.installment_count,
+      paid_installments: creditCardInstallments.paid_installments,
+      installment_cents: creditCardInstallments.installment_cents,
+      account_id: creditCardInstallments.account_id,
+    })
+    .from(creditCardInstallments)
+    .where(
+      and(
+        eq(creditCardInstallments.user_id, userId),
+        lt(
+          creditCardInstallments.paid_installments,
+          creditCardInstallments.installment_count
+        )
+      )
+    )
+    .orderBy(desc(creditCardInstallments.installment_cents))
+    .limit(5);
+
   const totalCents = Number(totalRow[0]?.total ?? 0);
 
   return {
@@ -210,6 +348,8 @@ async function loadDashboard(userId: string) {
     recentTx,
     upcoming,
     activeSubscriptions,
+    cards,
+    activeInstallments,
     monthSummary: {
       label: monthLabel(year, month),
       totals: monthTotals,
@@ -252,6 +392,8 @@ export default async function DashboardPage() {
     recentTx,
     upcoming,
     activeSubscriptions,
+    cards,
+    activeInstallments,
     monthSummary,
   } = await loadDashboard(user.id);
 
@@ -583,6 +725,190 @@ export default async function DashboardPage() {
             </ul>
           </section>
         ) : null}
+
+        {/* Cartões de crédito */}
+        <section
+          className="rounded-3xl border p-5 sm:p-6"
+          style={{
+            background: "oklch(0.21 0.007 30)",
+            borderColor: "oklch(0.245 0.008 30)",
+          }}
+        >
+          <div className="mb-4 flex items-baseline justify-between gap-3">
+            <h2
+              className="text-base font-medium"
+              style={{ fontStretch: "94%" }}
+            >
+              Cartões
+            </h2>
+            <p
+              className="shrink-0 text-xs"
+              style={{ color: "oklch(0.55 0.006 30)" }}
+            >
+              {cards.length === 0
+                ? "—"
+                : `${cards.length} ativ${cards.length === 1 ? "o" : "os"}`}
+            </p>
+          </div>
+          {cards.length === 0 ? (
+            <p
+              className="rounded-2xl border px-4 py-6 text-center text-xs"
+              style={{
+                background: "oklch(0.245 0.008 30)",
+                borderColor: "oklch(0.28 0.008 30)",
+                color: "oklch(0.55 0.006 30)",
+              }}
+            >
+              Nenhum cartão configurado. Vá em Configurações → Contas pra adicionar.
+            </p>
+          ) : (
+            <ul className="space-y-4">
+              {cards.map((card) => {
+                const swatchColor = card.color ?? "oklch(0.6 0.05 250)";
+                const limitCents = card.cc_limit_cents
+                  ? Number(card.cc_limit_cents)
+                  : 0;
+                const usagePct =
+                  limitCents > 0
+                    ? Math.min(
+                        100,
+                        Math.round((card.openInvoiceCents / limitCents) * 100)
+                      )
+                    : 0;
+                const usageColor =
+                  usagePct >= 80
+                    ? "oklch(0.78 0.16 25)"
+                    : "oklch(0.85 0.16 80)";
+                const cardInstallments = activeInstallments.filter(
+                  (i) => i.account_id === card.id
+                );
+                return (
+                  <li
+                    key={card.id}
+                    className="rounded-2xl border p-4"
+                    style={{
+                      background: "oklch(0.245 0.008 30)",
+                      borderColor: "oklch(0.28 0.008 30)",
+                    }}
+                  >
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p
+                        className="truncate text-sm font-medium"
+                        style={{ fontStretch: "94%" }}
+                      >
+                        {card.name}
+                      </p>
+                      {card.institution ? (
+                        <span
+                          className="shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide"
+                          style={{
+                            background: `color-mix(in oklch, ${swatchColor} 20%, transparent)`,
+                            color: swatchColor,
+                          }}
+                        >
+                          {card.institution}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {limitCents > 0 ? (
+                      <>
+                        <div className="mt-2 flex items-baseline justify-between gap-2 text-[11px]">
+                          <span style={{ color: "oklch(0.55 0.006 30)" }}>
+                            Fatura aberta
+                          </span>
+                          <span
+                            className="tabular-nums"
+                            style={{ color: "oklch(0.7 0.006 30)" }}
+                          >
+                            <span className="text-zinc-100">
+                              {BRL.format(card.openInvoiceCents / 100)}
+                            </span>
+                            {" / "}
+                            {BRL.format(limitCents / 100)}
+                          </span>
+                        </div>
+                        <div
+                          className="mt-1.5 h-1.5 overflow-hidden rounded-full"
+                          style={{ background: "oklch(0.27 0.008 30)" }}
+                        >
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${Math.max(2, usagePct)}%`,
+                              background: usageColor,
+                            }}
+                          />
+                        </div>
+                        <p
+                          className="mt-1 text-[11px] tabular-nums"
+                          style={{ color: "oklch(0.55 0.006 30)" }}
+                        >
+                          {usagePct}% do limite
+                        </p>
+                      </>
+                    ) : (
+                      <p
+                        className="mt-2 text-[11px]"
+                        style={{ color: "oklch(0.55 0.006 30)" }}
+                      >
+                        Limite não configurado
+                      </p>
+                    )}
+
+                    {card.cc_closing_day && card.cc_due_day ? (
+                      <p
+                        className="mt-2 text-[11px]"
+                        style={{ color: "oklch(0.55 0.006 30)" }}
+                      >
+                        Fecha {closeLabel(card.cc_closing_day)} · Vence{" "}
+                        {dueLabel(card.cc_due_day)}
+                      </p>
+                    ) : null}
+
+                    {cardInstallments.length > 0 ? (
+                      <>
+                        <p
+                          className="mt-3 font-mono text-[10px] uppercase tracking-wider"
+                          style={{ color: "oklch(0.55 0.006 30)" }}
+                        >
+                          {cardInstallments.length} parcelament
+                          {cardInstallments.length === 1 ? "o" : "os"} ativ
+                          {cardInstallments.length === 1 ? "o" : "os"}
+                        </p>
+                        <ul className="mt-1.5 space-y-1.5">
+                          {cardInstallments.map((i) => (
+                            <li
+                              key={i.id}
+                              className="flex items-center gap-3 text-[12px]"
+                            >
+                              <span className="min-w-0 flex-1 truncate">
+                                {i.description}
+                              </span>
+                              <span
+                                className="shrink-0 tabular-nums font-mono text-[10px]"
+                                style={{ color: "oklch(0.55 0.006 30)" }}
+                              >
+                                {i.paid_installments}/{i.installment_count}
+                              </span>
+                              <span
+                                className="shrink-0 tabular-nums"
+                                style={{ color: "oklch(0.7 0.006 30)" }}
+                              >
+                                {BRL.format(Number(i.installment_cents) / 100)}
+                                /mês
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         {/* Assinaturas */}
         <section

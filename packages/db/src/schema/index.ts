@@ -7,6 +7,7 @@ export * from "./shifts";
 export * from "./tasks";
 export * from "./financial";
 export * from "./subscriptions";
+export * from "./credit-cards";
 export * from "./inbox";
 export * from "./integrations";
 export * from "./insights";
