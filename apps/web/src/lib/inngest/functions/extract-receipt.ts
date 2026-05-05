@@ -1,10 +1,16 @@
 /**
- * Pipeline: inbox_batch (status=parsing) → vision LLM → items + status=review
+ * Pipeline: inbox_batch (status=parsing) → extração → items + status=review
+ *
+ * 4 caminhos de extração (escolhidos por `source_file_type`):
+ *   - text/csv                          → parseCsvBuffer       (zero LLM)
+ *   - application/x-ofx, .qfx           → parseOfxBuffer       (zero LLM)
+ *   - application/pdf                   → unpdf + LLM texto    (gpt-4o-mini)
+ *   - image/*                           → Vision LLM           (gpt-4.1-mini)
  *
  * Steps (cada step.run cacheia o resultado pra retry seguro):
  *   1. load-batch        — carrega e checa status
- *   2. prepare-images    — gera signed URLs (PDF → split em PNGs antes)
- *   3. extract           — LLM call (caro — cacheado)
+ *   2. prepare-input     — download do arquivo + decide modo + (CSV/OFX já parseiam aqui)
+ *   3. extract           — só roda se modo for pdf-text ou image
  *   4. load-aliases      — aliases do user pra renomeação automática
  *   5. load-recent-tx    — últimas 200 transactions pra detecção de duplicatas
  *   6. save-items        — INSERT bulk em inbox_batch_items
@@ -22,11 +28,22 @@ import {
 import { inngest } from "../client";
 import { getDb } from "@/lib/db";
 import { applyAliases, loadUserAliases, type AliasRow } from "@/lib/aliases";
-import { extractReceipt } from "@/lib/openai/extract-receipt";
-import { pdfBufferToImages } from "@/lib/storage/pdf-to-images";
+import {
+  extractReceiptFromImages,
+  extractReceiptFromText,
+  type ReceiptExtraction,
+} from "@/lib/openai/extract-receipt";
+import { parseCsvBuffer } from "@/lib/parsers/csv";
+import { parseOfxBuffer } from "@/lib/parsers/ofx";
+import { pdfBufferToText } from "@/lib/parsers/pdf-text";
 import { createSupabaseServiceClient } from "@/lib/supabase/admin";
 
 const SIGNED_URL_TTL_SECONDS = 300;
+
+type PreparedInput =
+  | { mode: "preparsed"; extraction: ReceiptExtraction; notes: string | null }
+  | { mode: "pdf-text"; text: string; pagesTotal: number; truncated: boolean }
+  | { mode: "image"; signedUrl: string };
 
 export const extractReceiptFn = inngest.createFunction(
   { id: "extract-receipt", retries: 2 },
@@ -61,11 +78,12 @@ export const extractReceiptFn = inngest.createFunction(
       throw new Error("batch sem source_file_type");
     }
 
-    // 2. Prepara imagens — signed URLs do que já é image, ou converte PDF
-    const prepared = await step.run("prepare-images", async () => {
+    // 2. Prepara input por tipo de arquivo
+    const prepared: PreparedInput = await step.run("prepare-input", async (): Promise<PreparedInput> => {
       const filePath = batch.source_file_url!;
       const fileType = batch.source_file_type!;
 
+      // Imagens: signed URL → vai pra Vision
       if (fileType.startsWith("image/")) {
         const { data: signed, error } = await supabase.storage
           .from("receipts")
@@ -73,37 +91,71 @@ export const extractReceiptFn = inngest.createFunction(
         if (error || !signed?.signedUrl) {
           throw new Error(`signed url falhou: ${error?.message ?? "no url"}`);
         }
+        return { mode: "image", signedUrl: signed.signedUrl };
+      }
+
+      // Demais tipos: precisamos do conteúdo em buffer
+      const { data: blob, error: dlErr } = await supabase.storage
+        .from("receipts")
+        .download(filePath);
+      if (dlErr || !blob) {
+        throw new Error(`download falhou: ${dlErr?.message ?? "no blob"}`);
+      }
+      const buffer = Buffer.from(await blob.arrayBuffer());
+
+      // CSV → parser determinístico
+      if (
+        fileType === "text/csv" ||
+        fileType === "application/csv" ||
+        fileType === "application/vnd.ms-excel" /* alguns bancos enviam CSV com mime XLS */
+      ) {
+        const { extraction, bank } = parseCsvBuffer(buffer);
         return {
-          signedUrls: [signed.signedUrl],
-          pagesTotal: 1,
-          pagesProcessed: 1,
-          truncated: false,
+          mode: "preparsed",
+          extraction,
+          notes: `Parseado direto via CSV (${bank}) — sem LLM`,
         };
       }
 
+      // OFX → parser determinístico
+      if (
+        fileType === "application/x-ofx" ||
+        fileType === "application/vnd.intu.qfx" ||
+        fileType === "application/x-qfx"
+      ) {
+        const { extraction, bank } = parseOfxBuffer(buffer);
+        return {
+          mode: "preparsed",
+          extraction,
+          notes: `Parseado direto via OFX (${bank}) — sem LLM`,
+        };
+      }
+
+      // PDF → extrai texto pra LLM
       if (fileType === "application/pdf") {
-        const { data: blob, error: dlErr } = await supabase.storage
-          .from("receipts")
-          .download(filePath);
-        if (dlErr || !blob) {
-          throw new Error(`download PDF falhou: ${dlErr?.message ?? "no blob"}`);
+        const { text, pagesTotal, truncated } = await pdfBufferToText(buffer);
+        if (!text || text.trim().length < 50) {
+          throw new Error(
+            `PDF sem texto selecionável (provável escaneado). Páginas: ${pagesTotal}. Reenvie como foto.`
+          );
         }
-        const buffer = Buffer.from(await blob.arrayBuffer());
-        return await pdfBufferToImages({
-          supabase,
-          userId: batch.user_id,
-          batchId: batch.id,
-          pdfBuffer: buffer,
-        });
+        return { mode: "pdf-text", text, pagesTotal, truncated };
       }
 
       throw new Error(`tipo não suportado: ${fileType}`);
     });
 
-    // 3. Vision LLM — caro, step.run garante cache em retry
-    const extraction = await step.run("extract", async () => {
+    // 3. Extração — pula step inteiramente se já temos extraction (CSV/OFX)
+    const extraction: ReceiptExtraction = await step.run("extract", async () => {
       try {
-        return await extractReceipt(prepared.signedUrls);
+        if (prepared.mode === "preparsed") {
+          return prepared.extraction;
+        }
+        if (prepared.mode === "image") {
+          return await extractReceiptFromImages([prepared.signedUrl]);
+        }
+        // pdf-text
+        return await extractReceiptFromText(prepared.text);
       } catch (err) {
         await db
           .update(inboxBatches)
@@ -182,9 +234,12 @@ export const extractReceiptFn = inngest.createFunction(
         0
       );
       const noteParts: string[] = [];
-      if (prepared.truncated) {
+      if (prepared.mode === "preparsed" && prepared.notes) {
+        noteParts.push(prepared.notes);
+      }
+      if (prepared.mode === "pdf-text" && prepared.truncated) {
         noteParts.push(
-          `PDF truncado: processadas ${prepared.pagesProcessed}/${prepared.pagesTotal} páginas (limite MVP)`
+          `PDF muito longo: texto truncado (${prepared.pagesTotal} páginas processadas, conteúdo cortado em ~50 págs)`
         );
       }
       if (extraction.notes) noteParts.push(extraction.notes);
@@ -211,6 +266,7 @@ export const extractReceiptFn = inngest.createFunction(
       batch_id: batch.id,
       item_count: itemsResult.count,
       detected_origin: extraction.detected_origin,
+      mode: prepared.mode,
     };
   }
 );

@@ -1,10 +1,13 @@
 /**
- * Extração de fatura/extrato via OpenAI vision (gpt-4.1-mini).
+ * Extração de fatura/extrato via OpenAI.
  *
- * Recebe URLs assinadas de imagens (PNG/JPEG/WEBP — PDFs já convertidos pra
- * imagem antes via pdf-to-images). Retorna estrutura tipada com items.
+ * Dois modos:
+ *   - `extractReceiptFromImages(urls)` — usa Vision (gpt-4.1-mini). Pra fotos.
+ *   - `extractReceiptFromText(text)` — usa modelo barato de texto (gpt-4o-mini).
+ *     Pra PDFs digitais (Nubank, Itaú, Bradesco etc) onde texto é selecionável.
  *
- * Mesmo padrão de categorize.ts: beta.chat.completions.parse + zodResponseFormat.
+ * Mesmo schema/prompt em ambos. Mesmo padrão de categorize.ts:
+ *   beta.chat.completions.parse + zodResponseFormat.
  */
 import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
@@ -82,15 +85,18 @@ REGRAS DE EXTRAÇÃO:
 - Parcelamento: detecte padrão "X/Y" em descrições (ex: "MACBOOK 3/12") e preencha installment_current/total
 - Limpe descrições removendo prefixos genéricos ("PAYPAL *", "EBANX *", "MP *", "PG *") sem perder o vendor real
 - Mantenha raw_description com texto EXATO da fonte
-- Se a imagem estiver borrada ou ilegível em parte, retorne só o que tiver certeza e mencione em notes
+- Se a fonte estiver borrada/ilegível/parcial, retorne só o que tiver certeza e mencione em notes
 
 NUNCA invente transações que não estão visíveis. Prefira retornar menos itens com alta confiança.`;
 
-export async function extractReceipt(
+/**
+ * Extração via Vision (imagens). Mantém compat com receipts.ts antigo.
+ */
+export async function extractReceiptFromImages(
   imageUrls: string[]
 ): Promise<ReceiptExtraction> {
   if (imageUrls.length === 0) {
-    throw new Error("extractReceipt: imageUrls vazio");
+    throw new Error("extractReceiptFromImages: imageUrls vazio");
   }
 
   const client = getOpenAI();
@@ -122,7 +128,53 @@ export async function extractReceipt(
 
   const result = completion.choices[0]?.message.parsed;
   if (!result) {
-    throw new Error("OpenAI extractReceipt: empty response");
+    throw new Error("OpenAI extractReceiptFromImages: empty response");
   }
   return result;
 }
+
+/**
+ * Extração via texto puro (PDFs digitais). Usa modelo de parse (gpt-4o-mini)
+ * — ~10x mais barato que Vision, sem perda de acurácia em PDFs com texto
+ * selecionável.
+ */
+export async function extractReceiptFromText(
+  text: string
+): Promise<ReceiptExtraction> {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    throw new Error("extractReceiptFromText: texto vazio");
+  }
+
+  const client = getOpenAI();
+  const model = serverEnv.OPENAI_MODEL_PARSE;
+
+  const completion = await client.beta.chat.completions.parse({
+    model,
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      {
+        role: "user",
+        content: `Extraia as transações deste texto extraído de fatura/extrato. Lembre: ignore saldos, totais, headers de seção, datas isoladas, "pagamento recebido — obrigado".
+
+--- TEXTO DO DOCUMENTO ---
+${trimmed}
+--- FIM ---`,
+      },
+    ],
+    response_format: zodResponseFormat(extractionSchema, "receipt_extraction"),
+    temperature: 0.1,
+  });
+
+  const result = completion.choices[0]?.message.parsed;
+  if (!result) {
+    throw new Error("OpenAI extractReceiptFromText: empty response");
+  }
+  return result;
+}
+
+/**
+ * @deprecated Use extractReceiptFromImages ou extractReceiptFromText.
+ * Mantido por retrocompatibilidade com call sites antigos.
+ */
+export const extractReceipt = extractReceiptFromImages;

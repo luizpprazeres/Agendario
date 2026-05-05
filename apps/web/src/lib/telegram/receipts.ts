@@ -24,10 +24,19 @@ import { createSupabaseServiceClient } from "@/lib/supabase/admin";
 import { sendMessage } from "./api";
 
 const ALLOWED_TYPES = new Set([
+  // Imagens (Vision)
   "image/png",
   "image/jpeg",
   "image/webp",
+  // PDF (texto extraído + LLM)
   "application/pdf",
+  // CSV / OFX (parseados deterministicamente, sem LLM)
+  "text/csv",
+  "application/csv",
+  "application/vnd.ms-excel", // alguns bancos enviam CSV com mime XLS
+  "application/x-ofx",
+  "application/vnd.intu.qfx",
+  "application/x-qfx",
 ]);
 const MAX_BYTES = 25 * 1024 * 1024;
 
@@ -73,6 +82,9 @@ async function telegramDownload(token: string, filePath: string): Promise<Buffer
 function inferMimeFromPath(filePath: string): string {
   const lower = filePath.toLowerCase();
   if (lower.endsWith(".pdf")) return "application/pdf";
+  if (lower.endsWith(".csv")) return "text/csv";
+  if (lower.endsWith(".ofx")) return "application/x-ofx";
+  if (lower.endsWith(".qfx")) return "application/vnd.intu.qfx";
   if (lower.endsWith(".png")) return "image/png";
   if (lower.endsWith(".webp")) return "image/webp";
   return "image/jpeg"; // photos do Telegram são JPEG por padrão
@@ -105,8 +117,14 @@ export async function processReceiptUpload(input: ProcessReceiptInput): Promise<
     return;
   }
 
-  // 3. Validate
-  const mimeType = input.mimeType ?? inferMimeFromPath(fileInfo.file_path);
+  // 3. Validate — se mime do Telegram for genérico ou ausente, infere pela extensão
+  const isGenericMime =
+    !input.mimeType ||
+    input.mimeType === "application/octet-stream" ||
+    input.mimeType === "application/binary";
+  const mimeType = isGenericMime
+    ? inferMimeFromPath(input.fileName ?? fileInfo.file_path)
+    : input.mimeType!;
   if (!ALLOWED_TYPES.has(mimeType)) {
     await sendMessage({
       chat_id: input.chatId,
@@ -208,16 +226,34 @@ export async function processReceiptUpload(input: ProcessReceiptInput): Promise<
     data: { batch_id: created.id },
   });
 
-  // 8. Reply
+  // 8. Reply — mensagem ajustada ao formato (CSV/OFX é instantâneo, LLM demora mais)
   const url = `${clientEnv.NEXT_PUBLIC_APP_URL}/importar/${created.id}`;
+  const isStructured =
+    mimeType.includes("csv") ||
+    mimeType.includes("ofx") ||
+    mimeType.includes("qfx") ||
+    mimeType === "application/vnd.ms-excel";
+  const isPdf = mimeType === "application/pdf";
+
+  const intro = isStructured
+    ? "📊 *CSV/OFX recebido.* Processando..."
+    : isPdf
+      ? "📄 *PDF recebido.* Lendo o texto..."
+      : "📸 *Fatura recebida.* Lendo a imagem...";
+  const expected = isStructured
+    ? "_Pronto em segundos._"
+    : isPdf
+      ? "_Vai levar 5–15 segundos._"
+      : "_Vai levar 10–30 segundos._";
+
   await sendMessage({
     chat_id: input.chatId,
     text: [
-      "📸 *Fatura recebida.* Lendo agora...",
+      intro,
       "",
       `[Acompanhar processamento](${url})`,
       "",
-      "_Vai levar 10–30 segundos. Quando terminar, abra o link acima pra confirmar as transações._",
+      `${expected} _Quando terminar, abra o link acima pra confirmar as transações._`,
     ].join("\n"),
     parse_mode: "Markdown",
   });
