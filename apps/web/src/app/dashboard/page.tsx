@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   categories,
@@ -339,16 +340,16 @@ export default async function DashboardPage() {
             {greeting()}{firstName ? `, ${firstName}` : ""}.
           </h1>
         </div>
-        <form action={signOut}>
-          <button
-            type="submit"
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/importar"
             className="grid size-9 place-items-center rounded-full border text-zinc-300 transition hover:text-zinc-100"
             style={{
               borderColor: "oklch(0.28 0.008 30)",
               background: "oklch(0.21 0.007 30)",
             }}
-            title="Sair"
-            aria-label="Sair"
+            title="Importar fatura"
+            aria-label="Importar fatura"
           >
             <svg
               className="size-4"
@@ -356,11 +357,35 @@ export default async function DashboardPage() {
               fill="none"
               stroke="currentColor"
               strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+              <path d="M12 3v12M7 8l5-5 5 5M3 21h18" />
             </svg>
-          </button>
-        </form>
+          </Link>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="grid size-9 place-items-center rounded-full border text-zinc-300 transition hover:text-zinc-100"
+              style={{
+                borderColor: "oklch(0.28 0.008 30)",
+                background: "oklch(0.21 0.007 30)",
+              }}
+              title="Sair"
+              aria-label="Sair"
+            >
+              <svg
+                className="size-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+              </svg>
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="space-y-3 px-4 sm:space-y-4 sm:px-6">
