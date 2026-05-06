@@ -14,6 +14,7 @@ import {
 import { getDb } from "@/lib/db";
 import { inngest } from "@/lib/inngest/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { InteractiveBackground } from "./_components/InteractiveBackground";
 
 export const dynamic = "force-dynamic";
 
@@ -450,13 +451,14 @@ export default async function DashboardPage() {
 
   return (
     <main
-      className="mx-auto min-h-dvh max-w-2xl pb-24 sm:pb-10"
-      style={{ background: "oklch(0.17 0.006 30)" }}
+      className="relative mx-auto min-h-dvh max-w-2xl pb-24 text-white sm:pb-10 lg:max-w-6xl xl:max-w-7xl"
+      style={{ background: "transparent" }}
     >
+      <InteractiveBackground />
       {/* Top bar */}
       <header className="flex items-center justify-between gap-3 px-4 pt-5 pb-3 sm:px-6 sm:pt-8">
         <div>
-          <p className="text-xs" style={{ color: "oklch(0.55 0.006 30)" }}>
+          <p className="text-xs" style={{ color: "oklch(0.78 0 0)" }}>
             {todayLabel()}
           </p>
           <h1
@@ -469,11 +471,7 @@ export default async function DashboardPage() {
         <div className="flex shrink-0 items-center gap-2">
           <Link
             href="/importar"
-            className="grid size-9 place-items-center rounded-full border text-zinc-300 transition hover:text-zinc-100"
-            style={{
-              borderColor: "oklch(0.28 0.008 30)",
-              background: "oklch(0.21 0.007 30)",
-            }}
+            className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 backdrop-blur-xl backdrop-saturate-150 transition-all duration-300 hover:border-emerald-400/40 hover:bg-white/10 hover:text-white hover:shadow-[0_0_24px_oklch(0.92_0.22_155/0.25)]"
             title="Importar fatura"
             aria-label="Importar fatura"
           >
@@ -492,11 +490,7 @@ export default async function DashboardPage() {
           <form action={signOut}>
             <button
               type="submit"
-              className="grid size-9 place-items-center rounded-full border text-zinc-300 transition hover:text-zinc-100"
-              style={{
-                borderColor: "oklch(0.28 0.008 30)",
-                background: "oklch(0.21 0.007 30)",
-              }}
+              className="grid size-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 backdrop-blur-xl backdrop-saturate-150 transition-all duration-300 hover:border-white/30 hover:bg-white/10 hover:text-white hover:shadow-[0_0_24px_rgba(255,255,255,0.12)]"
               title="Sair"
               aria-label="Sair"
             >
@@ -514,25 +508,27 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <div className="space-y-3 px-4 sm:space-y-4 sm:px-6">
+      <div className="space-y-3 px-4 sm:space-y-4 sm:px-6 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
         {/* HERO — saldo total + mês */}
         <section
-          className="rounded-3xl border p-5 sm:p-6"
+          className="rounded-3xl border p-5 sm:p-6 lg:col-span-7 lg:order-1"
           style={{
-            background: "oklch(0.21 0.007 30)",
-            borderColor: "oklch(0.28 0.008 30)",
+            background: "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            borderColor: "rgba(255,255,255,0.10)",
             boxShadow:
               "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 30px 80px -40px rgba(0,0,0,0.7)",
           }}
         >
           <p
-            className="font-mono text-[10px] uppercase tracking-wider"
-            style={{ color: "oklch(0.55 0.006 30)" }}
+            className="font-mono text-[10px] uppercase tracking-[0.18em]"
+            style={{ color: "oklch(0.78 0 0)" }}
           >
             saldo total
           </p>
           <p
-            className="mt-1.5 text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl"
+            className="mt-2 text-4xl font-light tabular-nums tracking-tight sm:text-5xl lg:text-6xl"
             style={{ fontStretch: "90%" }}
           >
             {BRL.format(totalCents / 100)}
@@ -542,19 +538,23 @@ export default async function DashboardPage() {
             <svg
               viewBox="0 0 240 44"
               preserveAspectRatio="none"
-              className="mt-4 h-12 w-full overflow-visible"
+              className="mt-4 h-12 w-full overflow-visible lg:h-16"
               aria-hidden
+              style={{
+                filter:
+                  "drop-shadow(0 0 6px oklch(0.85 0.20 155 / 0.55)) drop-shadow(0 0 14px oklch(0.85 0.20 155 / 0.25))",
+              }}
             >
               <defs>
                 <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="0"
-                    stopColor="oklch(0.85 0.16 155)"
-                    stopOpacity="0.3"
+                    stopColor="oklch(0.88 0.22 155)"
+                    stopOpacity="0.45"
                   />
                   <stop
                     offset="1"
-                    stopColor="oklch(0.85 0.16 155)"
+                    stopColor="oklch(0.88 0.22 155)"
                     stopOpacity="0"
                   />
                 </linearGradient>
@@ -563,7 +563,7 @@ export default async function DashboardPage() {
               <path
                 d={spark.line}
                 fill="none"
-                stroke="oklch(0.85 0.16 155)"
+                stroke="oklch(0.92 0.22 155)"
                 strokeWidth="1.75"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -572,16 +572,16 @@ export default async function DashboardPage() {
           ) : (
             <div
               className="mt-4 h-12 rounded-lg"
-              style={{ background: "oklch(0.245 0.008 30)" }}
+              style={{ background: "rgba(255,255,255,0.06)" }}
             />
           )}
 
           <div
             className="mt-5 grid grid-cols-3 gap-3 border-t pt-4 sm:gap-6 sm:pt-5"
-            style={{ borderColor: "oklch(0.245 0.008 30)" }}
+            style={{ borderColor: "rgba(255,255,255,0.06)" }}
           >
             <div>
-              <p className="text-[11px]" style={{ color: "oklch(0.55 0.006 30)" }}>
+              <p className="text-[11px]" style={{ color: "oklch(0.78 0 0)" }}>
                 Receitas
               </p>
               <p className="mt-0.5 text-base font-semibold tabular-nums sm:text-lg text-emerald-400">
@@ -589,7 +589,7 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div>
-              <p className="text-[11px]" style={{ color: "oklch(0.55 0.006 30)" }}>
+              <p className="text-[11px]" style={{ color: "oklch(0.78 0 0)" }}>
                 Gastos
               </p>
               <p className="mt-0.5 text-base font-semibold tabular-nums sm:text-lg text-red-400">
@@ -597,7 +597,7 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div>
-              <p className="text-[11px]" style={{ color: "oklch(0.55 0.006 30)" }}>
+              <p className="text-[11px]" style={{ color: "oklch(0.78 0 0)" }}>
                 Líquido {monthSummary.label.split(" ")[0]?.toLowerCase()}
               </p>
               <p
@@ -619,10 +619,10 @@ export default async function DashboardPage() {
 
         {/* Favoritos — chips de templates 1-clique */}
         {favoriteTemplates.length > 0 ? (
-          <section>
+          <section className="lg:col-span-12 lg:order-3">
             <p
               className="font-mono text-[10px] uppercase tracking-wider mb-2 px-1"
-              style={{ color: "oklch(0.55 0.006 30)" }}
+              style={{ color: "oklch(0.78 0 0)" }}
             >
               Favoritos
             </p>
@@ -640,10 +640,11 @@ export default async function DashboardPage() {
                     <input type="hidden" name="template_id" value={tpl.id} />
                     <button
                       type="submit"
-                      className="flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm transition active:scale-[0.97] hover:border-zinc-700"
+                      className="flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm backdrop-blur-xl transition-all duration-300 active:scale-[0.97]"
                       style={{
-                        background: `color-mix(in oklch, ${swatch} 12%, oklch(0.21 0.007 30))`,
-                        borderColor: "oklch(0.28 0.008 30)",
+                        background: `color-mix(in oklch, ${swatch} 14%, rgba(255,255,255,0.04))`,
+                        borderColor: `color-mix(in oklch, ${swatch} 30%, rgba(255,255,255,0.10))`,
+                        boxShadow: `0 0 0 1px color-mix(in oklch, ${swatch} 8%, transparent) inset, 0 8px 24px -12px color-mix(in oklch, ${swatch} 60%, transparent)`,
                       }}
                     >
                       {tpl.icon ? (
@@ -673,11 +674,15 @@ export default async function DashboardPage() {
         {/* Próximo plantão (highlight) */}
         {next ? (
           <section
-            className="rounded-3xl border p-5"
+            className="rounded-3xl border p-5 lg:col-span-5 lg:order-2"
             style={{
               background:
-                "linear-gradient(135deg, oklch(0.27 0.04 155 / 0.5), oklch(0.21 0.007 30))",
-              borderColor: "oklch(0.28 0.008 30)",
+                "linear-gradient(135deg, oklch(0.55 0.18 155 / 0.18), rgba(255,255,255,0.04) 60%)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              borderColor: "oklch(0.85 0.18 155 / 0.30)",
+              boxShadow:
+                "0 0 0 1px oklch(0.85 0.18 155 / 0.10) inset, 0 24px 60px -30px oklch(0.85 0.18 155 / 0.40)",
             }}
           >
             <div className="flex items-center gap-2">
@@ -695,13 +700,13 @@ export default async function DashboardPage() {
                 {", "}
                 {timeShort.format(new Date(next.starts_at))}
               </p>
-              <p className="text-xs" style={{ color: "oklch(0.7 0.006 30)" }}>
+              <p className="text-xs" style={{ color: "oklch(0.88 0 0)" }}>
                 até {timeShort.format(new Date(next.ends_at))}
               </p>
             </div>
             <p
               className="mt-1 text-sm"
-              style={{ color: "oklch(0.7 0.006 30)" }}
+              style={{ color: "oklch(0.88 0 0)" }}
             >
               {next.title ?? next.workplace_name ?? "Local desconhecido"}
               {next.title && next.workplace_name
@@ -711,7 +716,7 @@ export default async function DashboardPage() {
             {next.pay_cents ? (
               <p
                 className="mt-2 text-xs tabular-nums"
-                style={{ color: "oklch(0.7 0.006 30)" }}
+                style={{ color: "oklch(0.88 0 0)" }}
               >
                 {BRL.format(Number(next.pay_cents) / 100)}
               </p>
@@ -722,10 +727,12 @@ export default async function DashboardPage() {
         {/* Top categorias */}
         {monthSummary.topCategories.length > 0 ? (
           <section
-            className="rounded-3xl border p-5 sm:p-6"
+            className="rounded-3xl border p-5 sm:p-6 lg:col-span-5 lg:order-4"
             style={{
-              background: "oklch(0.21 0.007 30)",
-              borderColor: "oklch(0.245 0.008 30)",
+              background: "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              borderColor: "rgba(255,255,255,0.06)",
             }}
           >
             <div className="mb-4 flex items-baseline justify-between">
@@ -735,7 +742,7 @@ export default async function DashboardPage() {
               >
                 Onde foi
               </h2>
-              <p className="text-xs" style={{ color: "oklch(0.55 0.006 30)" }}>
+              <p className="text-xs" style={{ color: "oklch(0.78 0 0)" }}>
                 {monthSummary.label.split(" ")[0]?.toLowerCase()}
               </p>
             </div>
@@ -755,7 +762,10 @@ export default async function DashboardPage() {
                       <span className="flex min-w-0 items-center gap-2 truncate">
                         <span
                           className="size-2 shrink-0 rounded-full"
-                          style={{ background: swatchColor }}
+                          style={{
+                            background: swatchColor,
+                            boxShadow: `0 0 8px ${swatchColor}, 0 0 2px ${swatchColor}`,
+                          }}
                         />
                         <span className="truncate">
                           {cat.category_icon &&
@@ -767,18 +777,22 @@ export default async function DashboardPage() {
                       </span>
                       <span
                         className="shrink-0 tabular-nums"
-                        style={{ color: "oklch(0.7 0.006 30)" }}
+                        style={{ color: "oklch(0.88 0 0)" }}
                       >
                         {BRL.format(cents / 100)}
                       </span>
                     </div>
                     <div
-                      className="h-1 overflow-hidden rounded-full"
-                      style={{ background: "oklch(0.27 0.008 30)" }}
+                      className="h-1.5 overflow-hidden rounded-full"
+                      style={{ background: "rgba(255,255,255,0.06)" }}
                     >
                       <div
                         className="h-full rounded-full"
-                        style={{ width: `${pct}%`, background: swatchColor }}
+                        style={{
+                          width: `${pct}%`,
+                          background: `linear-gradient(90deg, color-mix(in oklch, ${swatchColor} 70%, transparent), ${swatchColor})`,
+                          boxShadow: `0 0 12px ${swatchColor}, inset 0 1px 0 rgba(255,255,255,0.25)`,
+                        }}
                       />
                     </div>
                   </li>
@@ -790,10 +804,12 @@ export default async function DashboardPage() {
 
         {/* Assinaturas */}
         <section
-          className="rounded-3xl border p-5 sm:p-6"
+          className="rounded-3xl border p-5 sm:p-6 lg:col-span-7 lg:order-6"
           style={{
-            background: "oklch(0.21 0.007 30)",
-            borderColor: "oklch(0.245 0.008 30)",
+            background: "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            borderColor: "rgba(255,255,255,0.06)",
           }}
         >
           <div className="mb-4 flex items-baseline justify-between gap-3">
@@ -805,7 +821,7 @@ export default async function DashboardPage() {
             </h2>
             <p
               className="shrink-0 text-xs tabular-nums"
-              style={{ color: "oklch(0.55 0.006 30)" }}
+              style={{ color: "oklch(0.78 0 0)" }}
             >
               {activeSubscriptions.length === 0
                 ? "—"
@@ -816,9 +832,9 @@ export default async function DashboardPage() {
             <p
               className="rounded-2xl border px-4 py-6 text-center text-xs"
               style={{
-                background: "oklch(0.245 0.008 30)",
-                borderColor: "oklch(0.28 0.008 30)",
-                color: "oklch(0.55 0.006 30)",
+                background: "rgba(255,255,255,0.06)",
+                borderColor: "rgba(255,255,255,0.10)",
+                color: "oklch(0.78 0 0)",
               }}
             >
               Nenhuma assinatura cadastrada. Use /assinatura no Telegram (em breve).
@@ -845,12 +861,17 @@ export default async function DashboardPage() {
                     ? "text-amber-300"
                     : undefined;
                 return (
-                  <li key={sub.id} className="flex items-center gap-3">
+                  <li
+                    key={sub.id}
+                    className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-1 transition-colors hover:bg-white/[0.03]"
+                  >
                     <span
-                      className="grid size-9 shrink-0 place-items-center rounded-xl text-sm font-medium"
+                      className="grid size-9 shrink-0 place-items-center rounded-xl text-sm font-medium ring-1 ring-inset"
                       style={{
-                        background: `color-mix(in oklch, ${swatchColor} 18%, transparent)`,
+                        background: `color-mix(in oklch, ${swatchColor} 22%, transparent)`,
                         color: swatchColor,
+                        boxShadow: `0 0 14px color-mix(in oklch, ${swatchColor} 35%, transparent)`,
+                        ["--tw-ring-color" as string]: `color-mix(in oklch, ${swatchColor} 30%, transparent)`,
                       }}
                       aria-hidden
                     >
@@ -861,10 +882,11 @@ export default async function DashboardPage() {
                         <p className="truncate text-sm">{sub.name}</p>
                         {isYearly ? (
                           <span
-                            className="shrink-0 rounded-full px-1.5 py-px font-mono text-[9px] uppercase tracking-wide"
+                            className="shrink-0 rounded-full border px-1.5 py-px font-mono text-[9px] uppercase tracking-wide"
                             style={{
-                              background: "oklch(0.27 0.008 30)",
-                              color: "oklch(0.7 0.006 30)",
+                              background: "rgba(255,255,255,0.06)",
+                              borderColor: "rgba(255,255,255,0.10)",
+                              color: "oklch(0.88 0 0)",
                             }}
                           >
                             anual
@@ -875,7 +897,7 @@ export default async function DashboardPage() {
                         <p
                           className={`text-[11px] ${dueColor ?? ""}`}
                           style={
-                            dueColor ? undefined : { color: "oklch(0.55 0.006 30)" }
+                            dueColor ? undefined : { color: "oklch(0.78 0 0)" }
                           }
                         >
                           próxima {due}
@@ -894,10 +916,12 @@ export default async function DashboardPage() {
 
         {/* Transações recentes */}
         <section
-          className="rounded-3xl border p-5 sm:p-6"
+          className="rounded-3xl border p-5 sm:p-6 lg:col-span-7 lg:order-5"
           style={{
-            background: "oklch(0.21 0.007 30)",
-            borderColor: "oklch(0.245 0.008 30)",
+            background: "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            borderColor: "rgba(255,255,255,0.06)",
           }}
         >
           <div className="mb-4 flex items-baseline justify-between">
@@ -907,7 +931,7 @@ export default async function DashboardPage() {
             >
               Atividade recente
             </h2>
-            <p className="text-xs" style={{ color: "oklch(0.55 0.006 30)" }}>
+            <p className="text-xs" style={{ color: "oklch(0.78 0 0)" }}>
               {recentTx.length > 0 ? `${recentTx.length} últimas` : "—"}
             </p>
           </div>
@@ -915,15 +939,15 @@ export default async function DashboardPage() {
             <p
               className="rounded-2xl border px-4 py-6 text-center text-xs"
               style={{
-                background: "oklch(0.245 0.008 30)",
-                borderColor: "oklch(0.28 0.008 30)",
-                color: "oklch(0.55 0.006 30)",
+                background: "rgba(255,255,255,0.06)",
+                borderColor: "rgba(255,255,255,0.10)",
+                color: "oklch(0.78 0 0)",
               }}
             >
               Nenhuma transação ainda. Capture pelo Telegram.
             </p>
           ) : (
-            <ul className="-mx-1 divide-y" style={{ borderColor: "oklch(0.245 0.008 30)" }}>
+            <ul className="-mx-1 divide-y" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
               {recentTx.map((tx) => {
                 const cents = Number(tx.amount_cents);
                 const isIncome = tx.type === "income" || cents > 0;
@@ -934,13 +958,15 @@ export default async function DashboardPage() {
                 return (
                   <li
                     key={tx.id}
-                    className="flex items-center gap-3 px-1 py-2.5"
-                    style={{ borderColor: "oklch(0.245 0.008 30)" }}
+                    className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-white/[0.03]"
+                    style={{ borderColor: "rgba(255,255,255,0.06)" }}
                   >
                     <span
-                      className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-xl text-sm"
+                      className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-xl text-sm ring-1 ring-inset"
                       style={{
-                        background: `color-mix(in oklch, ${swatchColor} 18%, transparent)`,
+                        background: `color-mix(in oklch, ${swatchColor} 22%, transparent)`,
+                        boxShadow: `0 0 12px color-mix(in oklch, ${swatchColor} 30%, transparent)`,
+                        ["--tw-ring-color" as string]: `color-mix(in oklch, ${swatchColor} 25%, transparent)`,
                       }}
                       aria-hidden
                     >
@@ -954,7 +980,7 @@ export default async function DashboardPage() {
                       <p className="truncate text-sm">{tx.description}</p>
                       <p
                         className="truncate text-[11px]"
-                        style={{ color: "oklch(0.55 0.006 30)" }}
+                        style={{ color: "oklch(0.78 0 0)" }}
                       >
                         {dateLong.format(new Date(tx.occurred_on))}
                         {tx.category_name ? ` · ${tx.category_name}` : ""}
@@ -979,10 +1005,12 @@ export default async function DashboardPage() {
         {/* Plantões próximos (lista) */}
         {upcoming.length > 1 ? (
           <section
-            className="rounded-3xl border p-5 sm:p-6"
+            className="rounded-3xl border p-5 sm:p-6 lg:col-span-5 lg:order-7"
             style={{
-              background: "oklch(0.21 0.007 30)",
-              borderColor: "oklch(0.245 0.008 30)",
+              background: "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              borderColor: "rgba(255,255,255,0.06)",
             }}
           >
             <div className="mb-4 flex items-baseline justify-between">
@@ -992,7 +1020,7 @@ export default async function DashboardPage() {
               >
                 Próximos plantões
               </h2>
-              <p className="text-xs" style={{ color: "oklch(0.55 0.006 30)" }}>
+              <p className="text-xs" style={{ color: "oklch(0.78 0 0)" }}>
                 {upcoming.length} agendados
               </p>
             </div>
@@ -1012,7 +1040,7 @@ export default async function DashboardPage() {
                     <div className="w-12 shrink-0 text-center">
                       <p
                         className="font-mono text-[10px] uppercase"
-                        style={{ color: "oklch(0.55 0.006 30)" }}
+                        style={{ color: "oklch(0.78 0 0)" }}
                       >
                         {dayShort.format(start).replace(".", "")}
                       </p>
@@ -1026,8 +1054,8 @@ export default async function DashboardPage() {
                     <div
                       className="flex-1 rounded-2xl border px-4 py-3"
                       style={{
-                        background: "oklch(0.245 0.008 30)",
-                        borderColor: "oklch(0.28 0.008 30)",
+                        background: "rgba(255,255,255,0.06)",
+                        borderColor: "rgba(255,255,255,0.10)",
                       }}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -1036,7 +1064,7 @@ export default async function DashboardPage() {
                         </p>
                         <span
                           className="text-xs"
-                          style={{ color: "oklch(0.55 0.006 30)" }}
+                          style={{ color: "oklch(0.78 0 0)" }}
                         >
                           {timeShort.format(start)} → {timeShort.format(end)}
                         </span>
@@ -1044,7 +1072,7 @@ export default async function DashboardPage() {
                       {sh.title && sh.workplace_name ? (
                         <p
                           className="text-xs"
-                          style={{ color: "oklch(0.55 0.006 30)" }}
+                          style={{ color: "oklch(0.78 0 0)" }}
                         >
                           {sh.workplace_name}
                         </p>
@@ -1052,7 +1080,7 @@ export default async function DashboardPage() {
                       {pay ? (
                         <p
                           className="mt-1.5 text-xs tabular-nums"
-                          style={{ color: "oklch(0.7 0.006 30)" }}
+                          style={{ color: "oklch(0.88 0 0)" }}
                         >
                           {pay}
                         </p>
